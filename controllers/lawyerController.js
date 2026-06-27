@@ -214,7 +214,7 @@ export async function registerLawyer(req, res) {
     if (lawyerCheck.rows.length > 0 || clientCheck.rows.length > 0) {
       return res.status(409).json({
         error: "UserAlreadyExists",
-        message: "An account with this email/phone number already exists. Redirecting to login...",
+        message: "Account already exists. Please log in.",
         contact: contactInfo
       });
     }
@@ -266,8 +266,8 @@ export async function registerLawyer(req, res) {
 
     // Insert record — verification_status always 'pending' and is_visible 0 on registration
     await db.execute({
-      sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, bar_council_id, verification_status, password, contact_info, is_visible, packages, verified_cases) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, 0, ?, ?)`,
+      sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, bar_council_id, verification_status, password, contact_info, is_visible, packages, verified_cases, is_profile_completed) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, 0, ?, ?, 1)`,
       args: [
         finalId,
         name.trim(),
@@ -304,7 +304,8 @@ export async function registerLawyer(req, res) {
       verificationStatus: "pending",
       contactInfo,
       packages,
-      verified_cases: verifiedCases
+      verified_cases: verifiedCases,
+      isProfileCompleted: true
     };
 
     return res.status(201).json({
@@ -346,3 +347,36 @@ export async function verifyDigiLocker(req, res) {
     return res.status(500).json({ error: "Internal Server Error during DigiLocker verification." });
   }
 }
+
+export async function updateLawyerProfile(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, specialty, fought, won, bio, avatarBase64 } = req.body;
+    const parsedFought = parseInt(fought) || 0;
+    const parsedWon = won ? parseInt(won) : 0;
+    let winRate = '85%';
+    if (parsedFought > 0) winRate = `${Math.round((parsedWon / parsedFought) * 100)}%`;
+    const nameParts = (name || '').trim().split(/\s+/);
+    const avatarText = nameParts.map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AV';
+    await db.execute({
+      sql: 'UPDATE lawyers SET name = ?, specialty = ?, avatar_text = ?, avatar_base64 = COALESCE(?, avatar_base64), cases_handled = ?, win_rate = ?, bio = ?, is_profile_completed = 1 WHERE id = ?',
+      args: [name, specialty, avatarText, avatarBase64 || null, parsedFought, winRate, bio || '', id]
+    });
+    const updated = await db.execute({ sql: 'SELECT * FROM lawyers WHERE id = ?', args: [id] });
+    const row = updated.rows[0];
+    const lawyer = {
+      id: row.id, name: row.name, specialty: row.specialty, specialtyLabel: row.specialty_label,
+      avatarText: row.avatar_text, avatarBase64: row.avatar_base64, rating: row.rating,
+      casesHandled: Number(row.cases_handled), winRate: row.win_rate, bio: row.bio,
+      barNumber: row.bar_number, barCouncilId: row.bar_council_id,
+      verificationStatus: row.verification_status || 'pending', contactInfo: row.contact_info,
+      packages: JSON.parse(row.packages), verified_cases: JSON.parse(row.verified_cases),
+      isProfileCompleted: row.is_profile_completed === 1
+    };
+    return res.status(200).json({ message: 'Profile updated successfully.', user: lawyer });
+  } catch (error) {
+    console.error('Error updating lawyer:', error);
+    return res.status(500).json({ error: 'Internal Server Error during profile update.' });
+  }
+}
+

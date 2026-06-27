@@ -44,7 +44,8 @@ export async function loginUser(req, res) {
           verificationStatus: row.verification_status || 'pending',
           contactInfo: row.contact_info,
           packages: JSON.parse(row.packages),
-          verified_cases: JSON.parse(row.verified_cases)
+          verified_cases: JSON.parse(row.verified_cases),
+          isProfileCompleted: row.is_profile_completed === 1
         };
         return res.status(200).json({ exists: true, user: lawyer });
       }
@@ -69,7 +70,8 @@ export async function loginUser(req, res) {
           city: row.city,
           contact: row.contact,
           avatar: row.avatar,
-          interest: row.interest
+          interest: row.interest,
+          isProfileCompleted: row.is_profile_completed === 1
         };
         return res.status(200).json({ exists: true, user: client });
       }

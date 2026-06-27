@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { getAllLawyers, getLawyerById, registerLawyer, deleteLawyer, updateLawyerVerification, verifyDigiLocker } from "../controllers/lawyerController.js";
-import { getAllClients, registerClient, getClientById, deleteClient } from "../controllers/clientController.js";
+import { getAllLawyers, getLawyerById, registerLawyer, updateLawyerProfile, deleteLawyer, updateLawyerVerification, verifyDigiLocker } from "../controllers/lawyerController.js";
+import { getAllClients, registerClient, getClientById, updateClientProfile, deleteClient } from "../controllers/clientController.js";
 import { loginUser } from "../controllers/authController.js";
 
 const router = Router();
@@ -12,12 +12,14 @@ router.post("/login", loginUser);
 router.get("/lawyers", getAllLawyers);
 router.post("/lawyers", registerLawyer);
 router.get("/lawyers/:id", getLawyerById);
+router.put("/lawyers/:id", updateLawyerProfile);
 router.delete("/lawyers/:id", deleteLawyer);
 
 // Client routes
 router.get("/clients", getAllClients);
 router.post("/clients", registerClient);
 router.get("/clients/:id", getClientById);
+router.put("/clients/:id", updateClientProfile);
 router.delete("/clients/:id", deleteClient);
 
 // Admin routes (lawyer verification update)

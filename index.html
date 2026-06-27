@@ -361,6 +361,9 @@
         <button class="nav-tab" id="tab-btn-academy" data-tab="academy">
           <i data-lucide="book-open"></i> Know Your Rights
         </button>
+        <button class="nav-tab" id="tab-btn-settings" data-tab="settings" style="display: none;">
+          <i data-lucide="settings"></i> Profile Settings
+        </button>
       </nav>
 
       <div class="user-status-card" id="user-status">
@@ -1219,6 +1222,79 @@ Advocate [Lawyer Name]
 
             </div>
           </div>
+        </div>
+      </section>
+      
+      <!-- ==================== TAB 5: PROFILE SETTINGS ==================== -->
+      <section class="content-section" id="section-settings" style="display: none;">
+        <div class="glass-card" style="max-width: 600px; margin: 0 auto; padding: 32px;">
+          <h2 style="margin-bottom: 24px; font-family: var(--font-serif); border-bottom: 1px solid var(--color-thread-light); padding-bottom: 12px;"><i data-lucide="settings" style="width: 24px; height: 24px; margin-right: 8px; vertical-align: bottom;"></i> Profile Settings</h2>
+          
+          <form id="settings-form" style="display: flex; flex-direction: column; gap: 20px;">
+            <div id="settings-lawyer-fields" style="display: none;">
+              <!-- Same fields as wizard for Lawyers -->
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="settings-lawyer-name">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Practice Specialty</label>
+                  <select id="settings-lawyer-specialty">
+                    <option value="tenancy">Tenancy &amp; Housing Law</option>
+                    <option value="employment">Employment &amp; Labor Law</option>
+                    <option value="contract">Contracts &amp; Freelance</option>
+                    <option value="consumer">Consumer Protection</option>
+                    <option value="family">Family Law &amp; Divorce</option>
+                    <option value="criminal">Criminal Defense</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Years of Experience</label>
+                  <input type="number" id="settings-lawyer-exp">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Cases Fought</label>
+                  <input type="number" id="settings-lawyer-fought">
+                </div>
+                <div class="form-group">
+                  <label>Cases Won</label>
+                  <input type="number" id="settings-lawyer-won">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Short Bio</label>
+                <textarea id="settings-lawyer-bio" rows="3"></textarea>
+              </div>
+            </div>
+
+            <div id="settings-client-fields" style="display: none;">
+              <!-- Same fields as wizard for Clients -->
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="settings-client-name">
+              </div>
+              <div class="form-group">
+                <label>City</label>
+                <input type="text" id="settings-client-city">
+              </div>
+              <div class="form-group">
+                <label>Primary Legal Interest</label>
+                <select id="settings-client-interest">
+                  <option value="Tenant Disputes">Tenant / Housing Disputes</option>
+                  <option value="Employment Matters">Employment / Unpaid Wages</option>
+                  <option value="Freelance Contracts">Freelance Contracts</option>
+                  <option value="Consumer Fraud">Consumer Fraud</option>
+                  <option value="Family Law">Family / Divorce Law</option>
+                  <option value="Other">Other / General Inquiry</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="btn-save-settings"><i data-lucide="save"></i> Save Changes</button>
+          </form>
         </div>
       </section>
       

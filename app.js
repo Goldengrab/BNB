@@ -461,6 +461,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (loginData.exists) {
           const user = loginData.user;
+          
+          if (!user.isProfileCompleted) {
+            // Profile is not complete (legacy accounts or stub records)
+            loginOverlay.style.display = 'none';
+            onboardingOverlay.style.display = 'flex';
+            onboardingStep1.style.display = 'none';
+            if (onboardingRole === 'lawyer') {
+              onboardingStep3Lawyer.style.display = 'flex';
+            } else {
+              onboardingStep3Client.style.display = 'flex';
+            }
+            return;
+          }
+
           state.userType = onboardingRole;
           state.userProfile = user;
 
@@ -2871,6 +2885,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabMatchmaker = document.getElementById('tab-btn-matchmaker');
     const tabWorkspace = document.getElementById('tab-btn-workspace');
     const tabAcademy = document.getElementById('tab-btn-academy');
+    const tabSettings = document.getElementById('tab-btn-settings');
+    if (tabSettings) tabSettings.style.display = 'flex';
 
     if (role === 'lawyer') {
       if (tabAnalyzer) tabAnalyzer.style.display = 'none';
@@ -3623,5 +3639,293 @@ Advocate for Plaintiff`,
       }
     });
   }
+
+  // ==================== SETTINGS LOGIC ====================
+  const settingsForm = document.getElementById('settings-form');
+  if (settingsForm) {
+    settingsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save-settings');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i data-lucide="loader-2" style="width:16px;height:16px;display:inline;margin-right:6px;"></i> Saving...';
+      btn.disabled = true;
+
+      try {
+        let endpoint = '';
+        let payload = {};
+
+        if (state.userType === 'lawyer') {
+          endpoint = `${API_BASE}/api/lawyers/${state.userProfile.id}`;
+          payload = {
+            name: document.getElementById('settings-lawyer-name').value,
+            specialty: document.getElementById('settings-lawyer-specialty').value,
+            exp: document.getElementById('settings-lawyer-exp').value,
+            fought: document.getElementById('settings-lawyer-fought').value,
+            won: document.getElementById('settings-lawyer-won').value,
+            bio: document.getElementById('settings-lawyer-bio').value
+          };
+        } else {
+          endpoint = `${API_BASE}/api/clients/${state.userProfile.id}`;
+          payload = {
+            name: document.getElementById('settings-client-name').value,
+            city: document.getElementById('settings-client-city').value,
+            interest: document.getElementById('settings-client-interest').value
+          };
+        }
+
+        const res = await fetch(endpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Failed to update profile');
+        }
+        const data = await res.json();
+        state.userProfile = data.user;
+        persistSession();
+
+        // Update header name
+        const userRoleEl = document.querySelector('.user-role');
+        if (userRoleEl) userRoleEl.textContent = state.userProfile.name;
+
+        btn.innerHTML = '<i data-lucide="check" style="width:16px;height:16px;display:inline;margin-right:6px;"></i> Saved!';
+        lucide.createIcons();
+        setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; lucide.createIcons(); }, 2000);
+        return;
+
+      } catch (err) {
+        console.error(err);
+        alert('Error saving profile: ' + err.message);
+      }
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      lucide.createIcons();
+    });
+  }
+
+  // Populate Settings form when switching to that tab
+  function populateSettingsForm() {
+    if (!state.userProfile) return;
+    if (state.userType === 'lawyer') {
+      document.getElementById('settings-lawyer-fields').style.display = 'block';
+      document.getElementById('settings-client-fields').style.display = 'none';
+      document.getElementById('settings-lawyer-name').value = state.userProfile.name || '';
+      document.getElementById('settings-lawyer-specialty').value = state.userProfile.specialty || 'family';
+      const fought = state.userProfile.casesHandled || 0;
+      document.getElementById('settings-lawyer-fought').value = fought;
+      const wr = parseInt((state.userProfile.winRate || '0%').replace('%', ''));
+        draftBtns.forEach(btn => {
+          const text = btn.textContent.toLowerCase();
+          btn.style.display = text.includes(query) ? 'block' : 'none';
+        });
+      });
+    }
+  }
+
+  // Fetch existing lawyers from the database and populate the list
+  async function fetchLawyersFromDatabase() {
+    try {
+      const response = await fetch(`${API_BASE}/api/lawyers`);
+      if (response.ok) {
+        const dbLawyers = await response.json();
+        if (dbLawyers && dbLawyers.length > 0) {
+          // Merge with static seeds, ensuring no duplicates by ID
+          dbLawyers.forEach(lawyer => {
+            const index = LAWYERS_DATABASE.findIndex(l => l.id === lawyer.id);
+            if (index !== -1) {
+              LAWYERS_DATABASE[index] = lawyer;
+            } else {
+              LAWYERS_DATABASE.unshift(lawyer);
+            }
+          });
+          // Re-render UI list
+          renderLawyers();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch lawyers from database:", error);
+    }
+  }
+
+  // Pre-load default lawyers & set initial navigation
+  renderLawyers();
+  updateNavForUserRole();
+  initLawyerToolkit();
+  fetchLawyersFromDatabase();
+
+  // Restore user session on startup if present
+  const savedUserType = localStorage.getItem('AEQUITAS_USER_TYPE');
+  const savedUserProfile = localStorage.getItem('AEQUITAS_USER_PROFILE');
+  if (savedUserType && savedUserProfile) {
+    try {
+      const userProfile = JSON.parse(savedUserProfile);
+      restoreUserSession(savedUserType, userProfile);
+    } catch (err) {
+      console.error("Failed to restore session:", err);
+      localStorage.removeItem('AEQUITAS_USER_TYPE');
+      localStorage.removeItem('AEQUITAS_USER_PROFILE');
+    }
+  }
+
+  // ==================== DIGILOCKER VERIFICATION LOGIC ====================
+  const digilockerLockScreen = document.getElementById('digilocker-lock-screen');
+  const btnDigilockerVerify = document.getElementById('btn-digilocker-verify');
+  const verifyLockBarId = document.getElementById('verify-lock-bar-id');
+
+  window.checkDigiLockerLock = function() {
+    if (state.userType === 'lawyer' && state.userProfile && state.userProfile.verificationStatus !== 'verified') {
+      if (digilockerLockScreen) {
+        digilockerLockScreen.style.display = 'flex';
+        if (state.userProfile.barCouncilId) {
+          verifyLockBarId.value = state.userProfile.barCouncilId;
+        }
+      }
+    } else {
+      if (digilockerLockScreen) {
+        digilockerLockScreen.style.display = 'none';
+      }
+    }
+  }
+
+  if (btnDigilockerVerify) {
+    btnDigilockerVerify.addEventListener('click', async () => {
+      const barId = verifyLockBarId.value.trim();
+      if (!barId) {
+        alert('Please enter your Bar Council ID to verify.');
+        return;
+      }
+
+      btnDigilockerVerify.disabled = true;
+      btnDigilockerVerify.innerHTML = '<i data-lucide="loader" class="spin"></i> Verifying...';
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`${API_BASE}/api/digilocker/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lawyerId: state.userProfile.id,
+            barCouncilId: barId
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Verification failed');
+        }
+
+        alert('Identity verified successfully! Welcome to your dashboard.');
+        
+        // Update local state
+        state.userProfile.verificationStatus = 'verified';
+        state.userProfile.barCouncilId = barId;
+        persistSession();
+        window.checkDigiLockerLock();
+      } catch (err) {
+        console.error('DigiLocker error:', err);
+        alert(err.message || 'Verification failed. Please try again.');
+      } finally {
+        btnDigilockerVerify.disabled = false;
+        btnDigilockerVerify.innerHTML = '<i data-lucide="check-circle" style="width:20px; height:20px;"></i> Verify via DigiLocker';
+        lucide.createIcons();
+      }
+    });
+  }
+
+  // ==================== SETTINGS LOGIC ====================
+  const settingsForm = document.getElementById('settings-form');
+  if (settingsForm) {
+    settingsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save-settings');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i data-lucide="loader-2" style="width:16px;height:16px;display:inline;margin-right:6px;"></i> Saving...';
+      btn.disabled = true;
+
+      try {
+        let endpoint = '';
+        let payload = {};
+
+        if (state.userType === 'lawyer') {
+          endpoint = `${API_BASE}/api/lawyers/${state.userProfile.id}`;
+          payload = {
+            name: document.getElementById('settings-lawyer-name').value,
+            specialty: document.getElementById('settings-lawyer-specialty').value,
+            exp: document.getElementById('settings-lawyer-exp').value,
+            fought: document.getElementById('settings-lawyer-fought').value,
+            won: document.getElementById('settings-lawyer-won').value,
+            bio: document.getElementById('settings-lawyer-bio').value
+          };
+        } else {
+          endpoint = `${API_BASE}/api/clients/${state.userProfile.id}`;
+          payload = {
+            name: document.getElementById('settings-client-name').value,
+            city: document.getElementById('settings-client-city').value,
+            interest: document.getElementById('settings-client-interest').value
+          };
+        }
+
+        const res = await fetch(endpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Failed to update profile');
+        }
+        const data = await res.json();
+        state.userProfile = data.user;
+        persistSession();
+
+        // Update header name
+        const userRoleEl = document.querySelector('.user-role');
+        if (userRoleEl) userRoleEl.textContent = state.userProfile.name;
+
+        btn.innerHTML = '<i data-lucide="check" style="width:16px;height:16px;display:inline;margin-right:6px;"></i> Saved!';
+        lucide.createIcons();
+        setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; lucide.createIcons(); }, 2000);
+        return;
+
+      } catch (err) {
+        console.error(err);
+        alert('Error saving profile: ' + err.message);
+      }
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      lucide.createIcons();
+    });
+  }
+
+  // Populate Settings form when switching to that tab
+  function populateSettingsForm() {
+    if (!state.userProfile) return;
+    if (state.userType === 'lawyer') {
+      document.getElementById('settings-lawyer-fields').style.display = 'block';
+      document.getElementById('settings-client-fields').style.display = 'none';
+      document.getElementById('settings-lawyer-name').value = state.userProfile.name || '';
+      document.getElementById('settings-lawyer-specialty').value = state.userProfile.specialty || 'family';
+      const fought = state.userProfile.casesHandled || 0;
+      document.getElementById('settings-lawyer-fought').value = fought;
+      const wr = parseInt((state.userProfile.winRate || '0%').replace('%', ''));
+      document.getElementById('settings-lawyer-won').value = Math.round((wr / 100) * fought);
+      document.getElementById('settings-lawyer-bio').value = state.userProfile.bio || '';
+    } else {
+      document.getElementById('settings-lawyer-fields').style.display = 'none';
+      document.getElementById('settings-client-fields').style.display = 'block';
+      document.getElementById('settings-client-name').value = state.userProfile.name || '';
+      document.getElementById('settings-client-city').value = state.userProfile.city || '';
+      document.getElementById('settings-client-interest').value = state.userProfile.interest || 'Other';
+    }
+  }
+
+  // Intercept settings tab click to populate form
+  document.getElementById('tab-btn-settings').addEventListener('click', () => {
+    setTimeout(populateSettingsForm, 50);
+  });
 
 });

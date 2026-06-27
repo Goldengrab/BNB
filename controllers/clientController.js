@@ -47,7 +47,7 @@ export async function registerClient(req, res) {
     if (lawyerCheck.rows.length > 0 || clientCheck.rows.length > 0) {
       return res.status(409).json({
         error: "UserAlreadyExists",
-        message: "An account with this email/phone number already exists. Redirecting to login...",
+        message: "Account already exists. Please log in.",
         contact: contact
       });
     }
@@ -68,7 +68,7 @@ export async function registerClient(req, res) {
     }
 
     await db.execute({
-      sql: "INSERT INTO clients (id, name, city, contact, avatar, interest, password) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      sql: "INSERT INTO clients (id, name, city, contact, avatar, interest, password, is_profile_completed) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
       args: [finalId, name.trim(), city.trim(), contact.trim(), avatar || null, interest, password || null]
     });
 
@@ -80,7 +80,8 @@ export async function registerClient(req, res) {
         city: city.trim(),
         contact: contact.trim(),
         avatar: avatar || null,
-        interest
+        interest,
+        isProfileCompleted: true
       }
     });
   } catch (error) {
@@ -146,3 +147,24 @@ export async function deleteClient(req, res) {
     return res.status(500).json({ error: "Internal Server Error during account deletion." });
   }
 }
+
+export async function updateClientProfile(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, city, interest, avatar } = req.body;
+    const clientCheck = await db.execute({ sql: 'SELECT * FROM clients WHERE id = ?', args: [id] });
+    if (clientCheck.rows.length === 0) return res.status(404).json({ error: 'Client not found.' });
+    await db.execute({
+      sql: 'UPDATE clients SET name = ?, city = ?, interest = ?, avatar = COALESCE(?, avatar), is_profile_completed = 1 WHERE id = ?',
+      args: [name, city, interest, avatar || null, id]
+    });
+    const updated = await db.execute({ sql: 'SELECT * FROM clients WHERE id = ?', args: [id] });
+    const row = updated.rows[0];
+    const client = { id: row.id, name: row.name, city: row.city, contact: row.contact, avatar: row.avatar, interest: row.interest, isProfileCompleted: row.is_profile_completed === 1 };
+    return res.status(200).json({ message: 'Profile updated successfully.', user: client });
+  } catch (error) {
+    console.error('Error updating client:', error);
+    return res.status(500).json({ error: 'Internal Server Error during profile update.' });
+  }
+}
+

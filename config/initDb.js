@@ -183,7 +183,8 @@ export async function initDb() {
       contact_info TEXT,
       is_visible INTEGER NOT NULL DEFAULT 0,
       packages TEXT NOT NULL, -- JSON string
-      verified_cases TEXT NOT NULL -- JSON string
+      verified_cases TEXT NOT NULL, -- JSON string
+      is_profile_completed INTEGER NOT NULL DEFAULT 0
     )
   `);
 
@@ -192,6 +193,7 @@ export async function initDb() {
   try { await db.execute(`ALTER TABLE lawyers ADD COLUMN verification_status TEXT NOT NULL DEFAULT 'pending'`); } catch(_) {}
   try { await db.execute(`ALTER TABLE lawyers ADD COLUMN password TEXT`); } catch(_) {}
   try { await db.execute(`ALTER TABLE lawyers ADD COLUMN is_visible INTEGER NOT NULL DEFAULT 0`); } catch(_) {}
+  try { await db.execute(`ALTER TABLE lawyers ADD COLUMN is_profile_completed INTEGER NOT NULL DEFAULT 0`); } catch(_) {}
 
   // Ensure contact uniqueness for lawyers
   try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_lawyers_contact ON lawyers(contact_info)`); } catch(e) { console.warn("Failed to create idx_lawyers_contact:", e.message); }
@@ -205,12 +207,14 @@ export async function initDb() {
       contact TEXT NOT NULL,
       avatar TEXT,
       interest TEXT NOT NULL,
-      password TEXT
+      password TEXT,
+      is_profile_completed INTEGER NOT NULL DEFAULT 0
     )
   `);
 
   // Add password column to existing clients table if it doesn't exist (migration)
   try { await db.execute(`ALTER TABLE clients ADD COLUMN password TEXT`); } catch(_) {}
+  try { await db.execute(`ALTER TABLE clients ADD COLUMN is_profile_completed INTEGER NOT NULL DEFAULT 0`); } catch(_) {}
 
   // Ensure contact uniqueness for clients
   try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_contact ON clients(contact)`); } catch(e) { console.warn("Failed to create idx_clients_contact:", e.message); }
@@ -225,8 +229,8 @@ export async function initDb() {
     console.log("Seeding database with default lawyers...");
     for (const lawyer of LAWYERS_SEED) {
       await db.execute({
-        sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, contact_info, packages, verified_cases) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, contact_info, packages, verified_cases, is_profile_completed) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
         args: [
           lawyer.id,
           lawyer.name,
