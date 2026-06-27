@@ -464,7 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
           
           if (!user.isProfileCompleted) {
             // Profile is not complete (legacy accounts or stub records)
-            loginOverlay.style.display = 'none';
             onboardingOverlay.style.display = 'flex';
             onboardingStep1.style.display = 'none';
             if (onboardingRole === 'lawyer') {
@@ -3709,198 +3708,22 @@ Advocate for Plaintiff`,
   // Populate Settings form when switching to that tab
   function populateSettingsForm() {
     if (!state.userProfile) return;
+    document.getElementById('settings-name-shared').value = state.userProfile.name || '';
+    document.getElementById('settings-city-shared').value = state.userProfile.city || '';
+    document.getElementById('settings-contact-shared').value = state.userProfile.contactInfo || state.userProfile.contact || '';
+    
     if (state.userType === 'lawyer') {
-      document.getElementById('settings-lawyer-fields').style.display = 'block';
-      document.getElementById('settings-client-fields').style.display = 'none';
-      document.getElementById('settings-lawyer-name').value = state.userProfile.name || '';
-      document.getElementById('settings-lawyer-specialty').value = state.userProfile.specialty || 'family';
-      const fought = state.userProfile.casesHandled || 0;
-      document.getElementById('settings-lawyer-fought').value = fought;
-      const wr = parseInt((state.userProfile.winRate || '0%').replace('%', ''));
-        draftBtns.forEach(btn => {
-          const text = btn.textContent.toLowerCase();
-          btn.style.display = text.includes(query) ? 'block' : 'none';
-        });
-      });
-    }
-  }
-
-  // Fetch existing lawyers from the database and populate the list
-  async function fetchLawyersFromDatabase() {
-    try {
-      const response = await fetch(`${API_BASE}/api/lawyers`);
-      if (response.ok) {
-        const dbLawyers = await response.json();
-        if (dbLawyers && dbLawyers.length > 0) {
-          // Merge with static seeds, ensuring no duplicates by ID
-          dbLawyers.forEach(lawyer => {
-            const index = LAWYERS_DATABASE.findIndex(l => l.id === lawyer.id);
-            if (index !== -1) {
-              LAWYERS_DATABASE[index] = lawyer;
-            } else {
-              LAWYERS_DATABASE.unshift(lawyer);
-            }
-          });
-          // Re-render UI list
-          renderLawyers();
-        }
-      }
-    } catch (error) {
-      console.error("Failed to fetch lawyers from database:", error);
-    }
-  }
-
-  // Pre-load default lawyers & set initial navigation
-  renderLawyers();
-  updateNavForUserRole();
-  initLawyerToolkit();
-  fetchLawyersFromDatabase();
-
-  // Restore user session on startup if present
-  const savedUserType = localStorage.getItem('AEQUITAS_USER_TYPE');
-  const savedUserProfile = localStorage.getItem('AEQUITAS_USER_PROFILE');
-  if (savedUserType && savedUserProfile) {
-    try {
-      const userProfile = JSON.parse(savedUserProfile);
-      restoreUserSession(savedUserType, userProfile);
-    } catch (err) {
-      console.error("Failed to restore session:", err);
-      localStorage.removeItem('AEQUITAS_USER_TYPE');
-      localStorage.removeItem('AEQUITAS_USER_PROFILE');
-    }
-  }
-
-  // ==================== DIGILOCKER VERIFICATION LOGIC ====================
-  const digilockerLockScreen = document.getElementById('digilocker-lock-screen');
-  const btnDigilockerVerify = document.getElementById('btn-digilocker-verify');
-  const verifyLockBarId = document.getElementById('verify-lock-bar-id');
-
-  window.checkDigiLockerLock = function() {
-    if (state.userType === 'lawyer' && state.userProfile && state.userProfile.verificationStatus !== 'verified') {
-      if (digilockerLockScreen) {
-        digilockerLockScreen.style.display = 'flex';
-        if (state.userProfile.barCouncilId) {
-          verifyLockBarId.value = state.userProfile.barCouncilId;
-        }
-      }
+      document.getElementById('lawyer-only-settings').style.display = 'block';
+      document.getElementById('client-only-settings').style.display = 'none';
+      document.getElementById('settings-lawyer-specialty').value = state.userProfile.specialty || 'tenancy';
+      document.getElementById('settings-lawyer-exp').value = state.userProfile.experience || 0;
+      document.getElementById('settings-lawyer-fought').value = state.userProfile.casesHandled || 0;
+      document.getElementById('settings-lawyer-won').value = state.userProfile.casesWon || parseInt((state.userProfile.winRate || '0%').replace('%', '')) || 0;
+      document.getElementById('settings-lawyer-bio').value = state.userProfile.bio || '';
     } else {
-      if (digilockerLockScreen) {
-        digilockerLockScreen.style.display = 'none';
-      }
+      document.getElementById('lawyer-only-settings').style.display = 'none';
+      document.getElementById('client-only-settings').style.display = 'block';
+      document.getElementById('settings-client-interest').value = state.userProfile.interest || 'Tenant Disputes';
     }
   }
-
-  if (btnDigilockerVerify) {
-    btnDigilockerVerify.addEventListener('click', async () => {
-      const barId = verifyLockBarId.value.trim();
-      if (!barId) {
-        alert('Please enter your Bar Council ID to verify.');
-        return;
-      }
-
-      btnDigilockerVerify.disabled = true;
-      btnDigilockerVerify.innerHTML = '<i data-lucide="loader" class="spin"></i> Verifying...';
-      lucide.createIcons();
-
-      try {
-        const res = await fetch(`${API_BASE}/api/digilocker/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            lawyerId: state.userProfile.id,
-            barCouncilId: barId
-          })
-        });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Verification failed');
-        }
-
-        alert('Identity verified successfully! Welcome to your dashboard.');
-        
-        // Update local state
-        state.userProfile.verificationStatus = 'verified';
-        state.userProfile.barCouncilId = barId;
-        persistSession();
-        window.checkDigiLockerLock();
-      } catch (err) {
-        console.error('DigiLocker error:', err);
-        alert(err.message || 'Verification failed. Please try again.');
-      } finally {
-        btnDigilockerVerify.disabled = false;
-        btnDigilockerVerify.innerHTML = '<i data-lucide="check-circle" style="width:20px; height:20px;"></i> Verify via DigiLocker';
-        lucide.createIcons();
-      }
-    });
-  }
-
-  // ==================== SETTINGS LOGIC ====================
-
-  function populateSettingsForm() {
-    if (!state.userProfile) return;
-    const p = state.userProfile;
-
-    // Shared fields (both roles)
-    const nameEl    = document.getElementById('settings-name-shared');
-    const cityEl    = document.getElementById('settings-city-shared');
-    const contactEl = document.getElementById('settings-contact-shared');
-
-    if (nameEl)    nameEl.value    = p.name || '';
-    if (cityEl)    cityEl.value    = p.city || p.contactInfo || '';
-    if (contactEl) contactEl.value = p.contactInfo || p.contact || '';
-
-    // Toggle role-specific sections
-    const lawyerSection = document.getElementById('lawyer-only-settings');
-    const clientSection = document.getElementById('client-only-settings');
-
-    if (state.userType === 'lawyer') {
-      if (lawyerSection) lawyerSection.style.display = 'block';
-      if (clientSection) clientSection.style.display = 'none';
-
-      const specEl   = document.getElementById('settings-lawyer-specialty');
-      const expEl    = document.getElementById('settings-lawyer-exp');
-      const foughtEl = document.getElementById('settings-lawyer-fought');
-      const wonEl    = document.getElementById('settings-lawyer-won');
-      const bioEl    = document.getElementById('settings-lawyer-bio');
-
-      if (specEl)   specEl.value   = p.specialty || 'family';
-      if (foughtEl) foughtEl.value = p.casesHandled || 0;
-      const wr = parseInt((p.winRate || '0%').replace('%', ''));
-      if (wonEl)    wonEl.value    = Math.round((wr / 100) * (p.casesHandled || 0));
-      if (bioEl)    bioEl.value    = p.bio || '';
-      // exp is not stored in DB yet — leave blank so user can fill
-      if (expEl)    expEl.value    = '';
-    } else {
-      if (lawyerSection) lawyerSection.style.display = 'none';
-      if (clientSection) clientSection.style.display = 'block';
-
-      // For clients, city comes from their profile
-      if (cityEl) cityEl.value = p.city || '';
-
-      const interestEl = document.getElementById('settings-client-interest');
-      if (interestEl) interestEl.value = p.interest || 'Other';
-    }
-
-    lucide.createIcons();
-  }
-
-  // Intercept Settings tab click → populate form
-  const tabBtnSettings = document.getElementById('tab-btn-settings');
-  if (tabBtnSettings) {
-    tabBtnSettings.addEventListener('click', () => {
-      setTimeout(populateSettingsForm, 50);
-    });
-  }
-
-  // Reset button → re-populate from current state
-  const btnResetSettings = document.getElementById('btn-reset-settings');
-  if (btnResetSettings) {
-    btnResetSettings.addEventListener('click', () => {
-      populateSettingsForm();
-      const statusMsg = document.getElementById('settings-status-msg');
-      if (statusMsg) { statusMsg.style.display = 'none'; statusMsg.textContent = ''; }
-    });
-  }
-
 });
