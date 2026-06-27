@@ -1902,23 +1902,56 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==================== MESSAGING WORKSPACE SIMULATION ====================
-  function appendChatMessage(sender, text, avatar) {
-    const msgWrapper = document.createElement('div');
-    msgWrapper.className = `msg-wrapper ${sender}`;
+  function renderWorkspaceChat() {
+    if (!chatMessagesBox) return;
+    chatMessagesBox.innerHTML = '';
     
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (!state.activeConsultation || !state.activeConsultation.chat) return;
 
-    msgWrapper.innerHTML = `
-      <div class="msg-bubble">
-        ${text}
-      </div>
-      <span class="msg-timestamp">${time}</span>
-    `;
+    const advocateText = state.workspaceData.lawyer ? state.workspaceData.lawyer.avatarText : 'SJ';
 
-    chatMessagesBox.appendChild(msgWrapper);
-    
-    // Auto-scroll chat box
+    state.activeConsultation.chat.forEach(msg => {
+      const sender = msg.sender === 'client' ? 'sent' : 'received';
+      const avatar = msg.sender === 'client' ? 'ME' : advocateText;
+      
+      const msgWrapper = document.createElement('div');
+      msgWrapper.className = `msg-wrapper ${sender}`;
+      
+      const time = msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      msgWrapper.innerHTML = `
+        <div class="msg-bubble">
+          ${msg.text}
+        </div>
+        <span class="msg-timestamp">${time}</span>
+      `;
+
+      chatMessagesBox.appendChild(msgWrapper);
+    });
     chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
+  }
+
+  function appendChatMessage(sender, text, avatar) {
+    if (!state.activeConsultation) return;
+    if (!state.activeConsultation.chat) {
+      state.activeConsultation.chat = [];
+    }
+    
+    const role = sender === 'sent' ? 'client' : 'lawyer';
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    state.activeConsultation.chat.push({
+      sender: role,
+      text: text,
+      time: time
+    });
+
+    renderWorkspaceChat();
+
+    // Reload active lawyer view client detail if viewing same client
+    if (state.userType === 'lawyer' && activeClient && (activeClient.id === 'client-current-user' || activeClient.name === state.userProfile.name)) {
+      loadActiveClientDetail(activeClient);
+    }
   }
 
   chatInputForm.addEventListener('submit', (e) => {
@@ -1926,9 +1959,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const text = chatMessageInput.value.trim();
     if (!text) return;
 
-    // Send user message
-    appendChatMessage('sent', text, 'ME');
+    if (!state.activeConsultation) {
+      state.activeConsultation = {
+        brief: 'Consultation Ingress',
+        date: new Date().toISOString().substring(0, 10),
+        mode: 'Online',
+        chat: []
+      };
+    }
+    if (!state.activeConsultation.chat) {
+      state.activeConsultation.chat = [];
+    }
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    state.activeConsultation.chat.push({
+      sender: 'client',
+      text: text,
+      time: time
+    });
+
     chatMessageInput.value = '';
+    renderWorkspaceChat();
+
+    // Reload active lawyer view client detail if viewing same client
+    if (state.userType === 'lawyer' && activeClient && (activeClient.id === 'client-current-user' || activeClient.name === state.userProfile.name)) {
+      loadActiveClientDetail(activeClient);
+    }
 
     // Create lawyer reply trigger
     const advocateText = state.workspaceData.lawyer ? state.workspaceData.lawyer.avatarText : 'SJ';
@@ -1945,10 +2001,8 @@ document.addEventListener('DOMContentLoaded', () => {
     chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
 
     setTimeout(() => {
-      // Remove typing bubble
       typingBubble.remove();
 
-      // Core reply routing
       let matchedResponse = "I hear you. Let me check our evidence files. Feel free to upload any screenshots or invoices so I can verify details.";
       const query = text.toLowerCase();
 
@@ -1959,7 +2013,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      appendChatMessage('received', matchedResponse, advocateText);
+      state.activeConsultation.chat.push({
+        sender: 'lawyer',
+        text: matchedResponse,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+
+      renderWorkspaceChat();
+
+      // Reload active lawyer view client detail if viewing same client
+      if (state.userType === 'lawyer' && activeClient && (activeClient.id === 'client-current-user' || activeClient.name === state.userProfile.name)) {
+        loadActiveClientDetail(activeClient);
+      }
     }, 1200);
   });
 
@@ -2608,11 +2673,81 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('lawyer-toolkit-view').style.display = 'none';
       lucide.createIcons();
 
+      // Check if logged in client has an active case in caseloadClients
+      if (state.userProfile) {
+        const matchingCaseload = caseloadClients.find(c => c.id === state.userProfile.id || c.name === state.userProfile.name);
+        if (matchingCaseload) {
+          state.activeConsultation = {
+            brief: matchingCaseload.issue,
+            date: matchingCaseload.date,
+            mode: matchingCaseload.mode,
+            chat: matchingCaseload.chat
+          };
+          state.isWorkspaceInitialized = true;
+          state.workspaceData.lawyer = LAWYERS_DATABASE[0]; // Sarah Jenkins
+          state.workspaceData.caseCategory = 'tenancy';
+          state.workspaceData.caseTitle = matchingCaseload.issue;
+          state.workspaceData.pricing = {
+            name: 'Consultation & Review',
+            price: '₹1,500',
+            desc: 'Document audit and legal brief preparation.'
+          };
+          
+          // Render step roadmap
+          const steps = [
+            { label: 'Demand Letter Sent', date: 'Completed', status: 'complete' },
+            { label: 'Review Response', date: 'Active', status: 'active' },
+            { label: 'Assemble Suit', date: 'Pending', status: 'pending' }
+          ];
+          wsRoadmapSteps.innerHTML = '';
+          steps.forEach(step => {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = `roadmap-step-item ${step.status}`;
+            stepDiv.innerHTML = `
+              <div class="roadmap-dot"></div>
+              <span class="roadmap-text">${step.label}</span>
+              <span class="roadmap-date">${step.date}</span>
+            `;
+            wsRoadmapSteps.appendChild(stepDiv);
+          });
+
+          // Set sidebar values
+          wsLawyerAvatar.textContent = 'SJ';
+          wsLawyerName.textContent = 'Sarah Jenkins, Esq.';
+          wsLawyerRole.textContent = 'Tenancy Specialist';
+          wsPricingTag.textContent = 'Consultation & Review';
+          wsPricingPrice.textContent = '₹1,500';
+          wsPricingDesc.textContent = 'Document audit and legal brief preparation.';
+
+          // Populate documents
+          wsDocsCount.textContent = matchingCaseload.docs.length.toString();
+          uploadedFilesList.innerHTML = '';
+          matchingCaseload.docs.forEach(doc => {
+            const docDiv = document.createElement('div');
+            docDiv.className = 'file-list-item';
+            docDiv.innerHTML = `
+              <div class="file-info">
+                <i data-lucide="file-text"></i>
+                <div>
+                  <span class="file-name">${doc.name}</span>
+                  <span class="file-size">${doc.size}</span>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-mini btn-scan-clauses">Scan File</button>
+            `;
+            uploadedFilesList.appendChild(docDiv);
+          });
+
+          renderWorkspaceChat();
+        }
+      }
+
       // Update workspace layout for client
       document.getElementById('lawyer-caseload-container').style.display = 'none';
       if (state.activeConsultation) {
         document.getElementById('workspace-empty-container').style.display = 'none';
         document.getElementById('workspace-active-container').style.display = 'grid';
+        renderWorkspaceChat();
       } else {
         document.getElementById('workspace-empty-container').style.display = 'block';
         document.getElementById('workspace-active-container').style.display = 'none';
@@ -2630,9 +2765,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.activeConsultation) {
       const matchExists = activeClientsList.some(c => c.id === 'client-current-user');
       if (!matchExists) {
+        if (!state.activeConsultation.chat) {
+          state.activeConsultation.chat = [
+            { sender: 'client', text: `Hi, I booked you for: "${state.activeConsultation.brief}". Let's discuss.` }
+          ];
+        }
         activeClientsList.unshift({
           id: 'client-current-user',
-          name: 'You (Demo Client Booking)',
+          name: state.userProfile ? state.userProfile.name : 'You (Demo Client Booking)',
           issue: state.activeConsultation.brief,
           description: state.activeConsultation.brief,
           date: state.activeConsultation.date,
@@ -2641,9 +2781,7 @@ document.addEventListener('DOMContentLoaded', () => {
           docs: [
             { name: 'LeaseAgreement.pdf', size: '1.2 MB', scanned: false }
           ],
-          chat: [
-            { sender: 'client', text: `Hi, I booked you for: "${state.activeConsultation.brief}". Let's discuss.` }
-          ]
+          chat: state.activeConsultation.chat
         });
       }
     }
