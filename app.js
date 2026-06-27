@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize Lucide Icons
   lucide.createIcons();
 
+  // Dynamic API Base URL to allow client-side preview on other servers (e.g. Live Server on port 5500) while communicating with backend on port 3000
+  const API_BASE = window.location.port === '3000' ? '' : 'http://localhost:3000';
+
   // ==================== STATE MANAGEMENT ====================
   const state = {
     activeTab: 'analyzer',
@@ -227,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
       interest: interestVal
     };
 
-    fetch('/api/clients', {
+    fetch(`${API_BASE}/api/clients`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -323,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
       avatarBase64: lawyerAvatarBase64
     };
 
-    fetch('/api/lawyers', {
+    fetch(`${API_BASE}/api/lawyers`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -405,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadLawyers() {
     try {
-      const response = await fetch('/api/lawyers');
+      const response = await fetch(`${API_BASE}/api/lawyers`);
       if (response.ok) {
         LAWYERS_DATABASE = await response.json();
       } else {
