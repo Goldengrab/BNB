@@ -406,8 +406,39 @@
     </div>
 
     <!-- Main Dynamic Content Area -->
-    <main class="main-content" id="main-content-panel">
+    <main class="main-content" id="main-content-panel" style="position: relative;">
       
+      <!-- DIGILOCKER VERIFICATION OVERLAY (LAWYER ONBOARDING LOCK) -->
+      <div id="digilocker-lock-screen" style="display:none; position:absolute; inset:0; z-index:9000; background:rgba(8,12,20,0.85); backdrop-filter:blur(8px); flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+        <div class="glass-card" style="max-width:480px; width:100%; padding:40px; border-radius:24px; text-align:center; position:relative; overflow:hidden;">
+          <!-- decorative bg -->
+          <div style="position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle at 50% 0%, rgba(99,102,241,0.15) 0%, transparent 60%); pointer-events:none;"></div>
+          
+          <div style="width:64px; height:64px; margin:0 auto 24px; background:linear-gradient(135deg, rgba(99,102,241,0.2), rgba(34,211,238,0.2)); border:1px solid rgba(99,102,241,0.4); border-radius:16px; display:flex; align-items:center; justify-content:center; color:var(--accent-cyan);">
+            <i data-lucide="shield-alert" style="width:32px; height:32px;"></i>
+          </div>
+          
+          <h2 style="font-size:24px; margin-bottom:12px; font-weight:800;">Verify Your Identity</h2>
+          <p style="color:var(--text-secondary); font-size:14px; margin-bottom:28px; line-height:1.5;">
+            To access the advocate dashboard and receive client inquiries, you must verify your Bar Council ID through our secure DigiLocker integration.
+          </p>
+
+          <div style="text-align:left; margin-bottom:24px;">
+            <label style="display:block; font-size:12px; font-family:var(--font-mono); color:var(--text-secondary); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.05em;">Bar Council ID</label>
+            <input type="text" id="verify-lock-bar-id" placeholder="e.g. BC-MAH-2015-12345" style="width:100%; padding:14px 16px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:12px; color:var(--text-primary); font-family:var(--font-mono); font-size:15px; outline:none; transition:all 0.2s;">
+          </div>
+
+          <button id="btn-digilocker-verify" class="btn btn-primary" style="width:100%; padding:16px; font-size:16px; font-weight:700; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:10px;">
+            <i data-lucide="check-circle" style="width:20px; height:20px;"></i>
+            Verify via DigiLocker
+          </button>
+          
+          <p style="font-size:11px; color:var(--text-muted); margin-top:20px; font-family:var(--font-mono);">
+            Powered by Government of India API
+          </p>
+        </div>
+      </div>
+
       <!-- ==================== TAB 1: CASE ANALYZER ==================== -->
       <section class="content-section active" id="section-analyzer">
         <div class="hero-header">

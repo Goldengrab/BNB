@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     switchTab('workspace');
     onboardingOverlay.style.display = 'none';
     lucide.createIcons();
+    checkDigiLockerLock();
   }
 
   // ==================== STATE MANAGEMENT ====================
@@ -538,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
           onboardingOverlay.style.display = 'none';
           persistSession();
           lucide.createIcons();
+          checkDigiLockerLock();
           return;
         }
       }
@@ -602,6 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
       switchTab('workspace');
       onboardingOverlay.style.display = 'none';
       persistSession();
+      checkDigiLockerLock();
     } else {
       // Route to appropriate profile builder
       if (onboardingRole === 'client') {
@@ -663,6 +666,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (!response.ok) {
+        if (response.status === 409) {
+          alert('An account with this email/phone number already exists. Redirecting to login...');
+          onboardingStep3Client.style.display = 'none';
+          onboardingStep1.style.display = 'flex';
+          authToggleBtns.forEach(btn => {
+            if (btn.getAttribute('data-type') === 'phone') btn.click();
+          });
+          contactInput.value = onboardingContactVal;
+          return;
+        }
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to register client profile');
       }
@@ -835,6 +848,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (!response.ok) {
+        if (response.status === 409) {
+          alert('An account with this email/phone number already exists. Redirecting to login...');
+          onboardingStep3Lawyer.style.display = 'none';
+          onboardingStep1.style.display = 'flex';
+          authToggleBtns.forEach(btn => {
+            if (btn.getAttribute('data-type') === 'phone') btn.click();
+          });
+          contactInput.value = contactInfo;
+          return;
+        }
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to register advocate profile');
       }
@@ -900,6 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
       linkSwitchRole.style.display = 'inline-block';
       if (linkMyAccount) linkMyAccount.style.display = 'inline-block';
       persistSession();
+      checkDigiLockerLock();
     } catch (err) {
       console.warn('Backend lawyer registration failed, falling back to local session:', err);
       
@@ -988,6 +1012,7 @@ document.addEventListener('DOMContentLoaded', () => {
       linkSwitchRole.style.display = 'inline-block';
       if (linkMyAccount) linkMyAccount.style.display = 'inline-block';
       persistSession();
+      checkDigiLockerLock();
     }
   });
 
@@ -2596,6 +2621,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!response.ok) {
+          if (response.status === 409) {
+            alert('An account with this email/phone number already exists. Redirecting to login...');
+            onboardingStep3Lawyer.style.display = 'none';
+            onboardingStep1.style.display = 'flex';
+            authToggleBtns.forEach(btn => {
+              if (btn.getAttribute('data-type') === 'phone') btn.click();
+            });
+            contactInput.value = onboardingContactVal || "";
+            return;
+          }
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to register advocate profile');
         }
@@ -2653,6 +2688,7 @@ document.addEventListener('DOMContentLoaded', () => {
         linkSwitchRole.style.display = 'inline-block';
         switchTab('workspace');
         persistSession();
+        checkDigiLockerLock();
         submitBtn.disabled = false;
       } catch (err) {
         console.warn('Backend advocate registration failed, falling back to local session:', err);
@@ -2727,6 +2763,7 @@ document.addEventListener('DOMContentLoaded', () => {
         linkSwitchRole.style.display = 'inline-block';
         switchTab('workspace');
         persistSession();
+        checkDigiLockerLock();
         submitBtn.disabled = false;
       }
 
@@ -3172,7 +3209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.style.zIndex = '9999';
     modal.style.display = 'flex';
     modal.style.alignItems = 'center';
-    modal.style.justify = 'center';
+    modal.style.justifyContent = 'center';
 
     modal.innerHTML = `
       <div class="glass-card" style="width: 500px; padding: 24px; border: 1px solid var(--color-thread); position:relative; border-radius:0px;">
@@ -3523,4 +3560,70 @@ Advocate for Plaintiff`,
       localStorage.removeItem('AEQUITAS_USER_PROFILE');
     }
   }
+
+  // ==================== DIGILOCKER VERIFICATION LOGIC ====================
+  const digilockerLockScreen = document.getElementById('digilocker-lock-screen');
+  const btnDigilockerVerify = document.getElementById('btn-digilocker-verify');
+  const verifyLockBarId = document.getElementById('verify-lock-bar-id');
+
+  window.checkDigiLockerLock = function() {
+    if (state.userType === 'lawyer' && state.userProfile && state.userProfile.verificationStatus !== 'verified') {
+      if (digilockerLockScreen) {
+        digilockerLockScreen.style.display = 'flex';
+        if (state.userProfile.barCouncilId) {
+          verifyLockBarId.value = state.userProfile.barCouncilId;
+        }
+      }
+    } else {
+      if (digilockerLockScreen) {
+        digilockerLockScreen.style.display = 'none';
+      }
+    }
+  }
+
+  if (btnDigilockerVerify) {
+    btnDigilockerVerify.addEventListener('click', async () => {
+      const barId = verifyLockBarId.value.trim();
+      if (!barId) {
+        alert('Please enter your Bar Council ID to verify.');
+        return;
+      }
+
+      btnDigilockerVerify.disabled = true;
+      btnDigilockerVerify.innerHTML = '<i data-lucide="loader" class="spin"></i> Verifying...';
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`${API_BASE}/api/digilocker/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lawyerId: state.userProfile.id,
+            barCouncilId: barId
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Verification failed');
+        }
+
+        alert('Identity verified successfully! Welcome to your dashboard.');
+        
+        // Update local state
+        state.userProfile.verificationStatus = 'verified';
+        state.userProfile.barCouncilId = barId;
+        persistSession();
+        window.checkDigiLockerLock();
+      } catch (err) {
+        console.error('DigiLocker error:', err);
+        alert('Verification failed. Please try again.');
+      } finally {
+        btnDigilockerVerify.disabled = false;
+        btnDigilockerVerify.innerHTML = '<i data-lucide="check-circle" style="width:20px; height:20px;"></i> Verify via DigiLocker';
+        lucide.createIcons();
+      }
+    });
+  }
+
 });

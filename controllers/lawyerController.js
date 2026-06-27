@@ -15,7 +15,7 @@ const SPECIALTY_LABELS = {
  */
 export async function getAllLawyers(req, res) {
   try {
-    const result = await db.execute("SELECT * FROM lawyers");
+    const result = await db.execute("SELECT * FROM lawyers WHERE is_visible = 1");
     const lawyers = result.rows.map(row => {
       return {
         id: row.id,
@@ -113,6 +113,35 @@ export async function deleteLawyer(req, res) {
 }
 
 /**
+ * Update lawyer verification status (admin use)
+ */
+export async function updateLawyerVerification(req, res) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'verified' or 'pending' or 'rejected'
+
+    if (!['verified', 'pending', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: "Status must be 'verified', 'pending', or 'rejected'." });
+    }
+
+    const check = await db.execute({ sql: "SELECT id FROM lawyers WHERE id = ?", args: [id] });
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: "Advocate not found." });
+    }
+
+    await db.execute({
+      sql: "UPDATE lawyers SET verification_status = ? WHERE id = ?",
+      args: [status, id]
+    });
+
+    return res.status(200).json({ message: `Verification status updated to '${status}'.` });
+  } catch (error) {
+    console.error("Error updating verification:", error);
+    return res.status(500).json({ error: "Internal Server Error." });
+  }
+}
+
+/**
  * Register a new advocate profile
  */
 export async function registerLawyer(req, res) {
@@ -168,6 +197,28 @@ export async function registerLawyer(req, res) {
       return res.status(400).json({ error: "Validation Failed", details: errors });
     }
 
+    // CROSS-TABLE UNIQUE CONSTRAINT CHECK
+    const checkContact = contactInfo.trim().toLowerCase();
+    
+    // Check if it exists in lawyers
+    const lawyerCheck = await db.execute({
+      sql: "SELECT id FROM lawyers WHERE LOWER(contact_info) = ?",
+      args: [checkContact]
+    });
+    // Check if it exists in clients
+    const clientCheck = await db.execute({
+      sql: "SELECT id FROM clients WHERE LOWER(contact) = ?",
+      args: [checkContact]
+    });
+
+    if (lawyerCheck.rows.length > 0 || clientCheck.rows.length > 0) {
+      return res.status(409).json({
+        error: "UserAlreadyExists",
+        message: "An account with this email/phone number already exists. Redirecting to login...",
+        contact: contactInfo
+      });
+    }
+
     // Auto-calculate properties
     let winRate = "85%";
     if (parsedWon !== null && !isNaN(parsedWon)) {
@@ -213,10 +264,10 @@ export async function registerLawyer(req, res) {
       { case_type: `Compliance Review & Arbitration`, year: 2022, court_level: "Tribunal", role: "Petitioner's Counsel" }
     ];
 
-    // Insert record — verification_status always 'pending' on registration
+    // Insert record — verification_status always 'pending' and is_visible 0 on registration
     await db.execute({
-      sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, bar_council_id, verification_status, password, contact_info, packages, verified_cases) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
+      sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, bar_council_id, verification_status, password, contact_info, is_visible, packages, verified_cases) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, 0, ?, ?)`,
       args: [
         finalId,
         name.trim(),
@@ -264,5 +315,34 @@ export async function registerLawyer(req, res) {
   } catch (error) {
     console.error("Error registering lawyer:", error);
     return res.status(500).json({ error: "Internal Server Error during registration." });
+  }
+}
+
+/**
+ * Mock DigiLocker verification (to be called by frontend)
+ */
+export async function verifyDigiLocker(req, res) {
+  try {
+    const { lawyerId, barCouncilId } = req.body;
+
+    if (!lawyerId || !barCouncilId) {
+      return res.status(400).json({ error: "lawyerId and barCouncilId are required." });
+    }
+
+    const check = await db.execute({ sql: "SELECT id FROM lawyers WHERE id = ?", args: [lawyerId] });
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: "Advocate not found." });
+    }
+
+    // Update status to verified and make profile visible
+    await db.execute({
+      sql: "UPDATE lawyers SET verification_status = 'verified', is_visible = 1, bar_council_id = ? WHERE id = ?",
+      args: [barCouncilId, lawyerId]
+    });
+
+    return res.status(200).json({ message: "DigiLocker verification successful. Profile is now visible." });
+  } catch (error) {
+    console.error("Error verifying via DigiLocker:", error);
+    return res.status(500).json({ error: "Internal Server Error during DigiLocker verification." });
   }
 }

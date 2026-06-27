@@ -1,6 +1,19 @@
 import db from "../config/db.js";
 
 /**
+ * Get all registered clients (admin use)
+ */
+export async function getAllClients(req, res) {
+  try {
+    const result = await db.execute("SELECT id, name, city, contact, avatar, interest FROM clients");
+    return res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Error retrieving all clients:", error);
+    return res.status(500).json({ error: "Internal Server Error fetching clients." });
+  }
+}
+
+/**
  * Register a client profile
  */
 export async function registerClient(req, res) {
@@ -15,6 +28,28 @@ export async function registerClient(req, res) {
 
     if (errors.length > 0) {
       return res.status(400).json({ error: "Validation Failed", details: errors });
+    }
+
+    // CROSS-TABLE UNIQUE CONSTRAINT CHECK
+    const checkContact = contact.trim().toLowerCase();
+    
+    // Check if it exists in lawyers
+    const lawyerCheck = await db.execute({
+      sql: "SELECT id FROM lawyers WHERE LOWER(contact_info) = ?",
+      args: [checkContact]
+    });
+    // Check if it exists in clients
+    const clientCheck = await db.execute({
+      sql: "SELECT id FROM clients WHERE LOWER(contact) = ?",
+      args: [checkContact]
+    });
+
+    if (lawyerCheck.rows.length > 0 || clientCheck.rows.length > 0) {
+      return res.status(409).json({
+        error: "UserAlreadyExists",
+        message: "An account with this email/phone number already exists. Redirecting to login...",
+        contact: contact
+      });
     }
 
     let slugId = name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");

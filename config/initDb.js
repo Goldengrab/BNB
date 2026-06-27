@@ -181,6 +181,7 @@ export async function initDb() {
       verification_status TEXT NOT NULL DEFAULT 'pending',
       password TEXT,
       contact_info TEXT,
+      is_visible INTEGER NOT NULL DEFAULT 0,
       packages TEXT NOT NULL, -- JSON string
       verified_cases TEXT NOT NULL -- JSON string
     )
@@ -190,6 +191,10 @@ export async function initDb() {
   try { await db.execute(`ALTER TABLE lawyers ADD COLUMN bar_council_id TEXT`); } catch(_) {}
   try { await db.execute(`ALTER TABLE lawyers ADD COLUMN verification_status TEXT NOT NULL DEFAULT 'pending'`); } catch(_) {}
   try { await db.execute(`ALTER TABLE lawyers ADD COLUMN password TEXT`); } catch(_) {}
+  try { await db.execute(`ALTER TABLE lawyers ADD COLUMN is_visible INTEGER NOT NULL DEFAULT 0`); } catch(_) {}
+
+  // Ensure contact uniqueness for lawyers
+  try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_lawyers_contact ON lawyers(contact_info)`); } catch(e) { console.warn("Failed to create idx_lawyers_contact:", e.message); }
 
   // Create clients table
   await db.execute(`
@@ -206,6 +211,9 @@ export async function initDb() {
 
   // Add password column to existing clients table if it doesn't exist (migration)
   try { await db.execute(`ALTER TABLE clients ADD COLUMN password TEXT`); } catch(_) {}
+
+  // Ensure contact uniqueness for clients
+  try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_contact ON clients(contact)`); } catch(e) { console.warn("Failed to create idx_clients_contact:", e.message); }
 
   console.log("Tables validated / created.");
 
