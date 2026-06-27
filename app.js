@@ -17,6 +17,94 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `${window.location.protocol}//${window.location.hostname}:3000` 
         : (PRODUCTION_BACKEND_URL || 'http://localhost:3000'));
 
+  // ==================== SESSION PERSISTENCE HELPERS ====================
+  function persistSession() {
+    if (state.userType && state.userProfile) {
+      localStorage.setItem('AEQUITAS_USER_TYPE', state.userType);
+      localStorage.setItem('AEQUITAS_USER_PROFILE', JSON.stringify(state.userProfile));
+    } else {
+      localStorage.removeItem('AEQUITAS_USER_TYPE');
+      localStorage.removeItem('AEQUITAS_USER_PROFILE');
+    }
+  }
+
+  function restoreUserSession(role, user) {
+    state.userType = role;
+    state.userProfile = user;
+
+    // Update UI Status Card in header
+    const userRoleEl = document.querySelector('.user-role');
+    const statusTextEl = document.querySelector('.status-text');
+    const statusIndicator = document.querySelector('.status-indicator');
+    
+    userRoleEl.textContent = user.name;
+    
+    if (role === 'lawyer') {
+      statusTextEl.textContent = user.status === 'Pending Verification' 
+        ? 'Pending Verification' 
+        : 'Bar Verified & Active';
+
+      statusIndicator.className = 'status-indicator';
+      statusIndicator.style.backgroundColor = user.status === 'Pending Verification' 
+        ? 'var(--text-muted)' 
+        : 'var(--accent-cyan)';
+      statusIndicator.style.boxShadow = user.status === 'Pending Verification' 
+        ? 'none' 
+        : '0 0 8px var(--accent-cyan)';
+    } else {
+      statusTextEl.textContent = `${user.city} • Client`;
+      statusIndicator.className = 'status-indicator active';
+      statusIndicator.style.backgroundColor = 'var(--accent-indigo)';
+    }
+
+    // Update avatar circle in header status card
+    const userStatusCard = document.getElementById('user-status');
+    let avatarCircle = userStatusCard.querySelector('.avatar-header-circle');
+    if (!avatarCircle) {
+      avatarCircle = document.createElement('div');
+      avatarCircle.className = 'avatar-header-circle';
+      avatarCircle.style.width = '32px';
+      avatarCircle.style.height = '32px';
+      avatarCircle.style.borderRadius = '50%';
+      avatarCircle.style.marginRight = '8px';
+      avatarCircle.style.overflow = 'hidden';
+      avatarCircle.style.background = role === 'lawyer' 
+        ? 'linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo))'
+        : 'linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan))';
+      avatarCircle.style.display = 'flex';
+      avatarCircle.style.alignItems = 'center';
+      avatarCircle.style.justify = 'center';
+      avatarCircle.style.color = 'white';
+      avatarCircle.style.fontSize = '10px';
+      avatarCircle.style.fontWeight = 'bold';
+      userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
+    }
+    
+    const avatarSrc = role === 'lawyer' ? user.avatarBase64 : user.avatar;
+    if (avatarSrc) {
+      avatarCircle.innerHTML = `<img src="${avatarSrc}" style="width:100%; height:100%; object-fit:cover;">`;
+    } else {
+      avatarCircle.textContent = role === 'lawyer' 
+        ? user.avatarText 
+        : (user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'CL');
+    }
+
+    // If restoring a lawyer and they are not in the local in-memory LAWYERS_DATABASE, let's prepend them
+    if (role === 'lawyer') {
+      const index = LAWYERS_DATABASE.findIndex(l => l.id === user.id);
+      if (index === -1) {
+        LAWYERS_DATABASE.unshift(user);
+        renderLawyers();
+      }
+    }
+
+    linkSwitchRole.style.display = 'inline-block';
+    updateNavForUserRole();
+    switchTab('workspace');
+    onboardingOverlay.style.display = 'none';
+    lucide.createIcons();
+  }
+
   // ==================== STATE MANAGEMENT ====================
   const state = {
     activeTab: 'analyzer',
@@ -117,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.userProfile = null;
     state.activeConsultation = null;
     state.isWorkspaceInitialized = false;
+    persistSession();
 
     // Reset status UI
     const userRoleEl = document.querySelector('.user-role');
@@ -340,6 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
           linkSwitchRole.style.display = 'inline-block';
           updateNavForUserRole();
           switchTab('workspace');
+          persistSession();
           lucide.createIcons();
           return;
         }
@@ -403,6 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
       linkSwitchRole.style.display = 'inline-block';
       updateNavForUserRole();
       switchTab('workspace');
+      persistSession();
     } else {
       // Route to appropriate profile builder
       if (onboardingRole === 'client') {
@@ -522,6 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Hide onboarding overlay
       onboardingOverlay.style.display = 'none';
+      persistSession();
     } catch (err) {
       console.warn('Backend client registration failed, falling back to local session:', err);
       
@@ -587,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Hide onboarding overlay
       onboardingOverlay.style.display = 'none';
+      persistSession();
     }
   });
 
@@ -686,6 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Route to Case Workspace caseload page
       switchTab('workspace');
+      persistSession();
     } catch (err) {
       console.warn('Backend lawyer registration failed, falling back to local session:', err);
       
@@ -771,6 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Route to Case Workspace caseload page
       switchTab('workspace');
+      persistSession();
     }
   });
 
@@ -2435,6 +2530,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNavForUserRole();
         linkSwitchRole.style.display = 'inline-block';
         switchTab('workspace');
+        persistSession();
         submitBtn.disabled = false;
       } catch (err) {
         console.warn('Backend advocate registration failed, falling back to local session:', err);
@@ -2508,6 +2604,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNavForUserRole();
         linkSwitchRole.style.display = 'inline-block';
         switchTab('workspace');
+        persistSession();
         submitBtn.disabled = false;
       }
 
@@ -3290,4 +3387,18 @@ Advocate for Plaintiff`,
   updateNavForUserRole();
   initLawyerToolkit();
   fetchLawyersFromDatabase();
+
+  // Restore user session on startup if present
+  const savedUserType = localStorage.getItem('AEQUITAS_USER_TYPE');
+  const savedUserProfile = localStorage.getItem('AEQUITAS_USER_PROFILE');
+  if (savedUserType && savedUserProfile) {
+    try {
+      const userProfile = JSON.parse(savedUserProfile);
+      restoreUserSession(savedUserType, userProfile);
+    } catch (err) {
+      console.error("Failed to restore session:", err);
+      localStorage.removeItem('AEQUITAS_USER_TYPE');
+      localStorage.removeItem('AEQUITAS_USER_PROFILE');
+    }
+  }
 });
