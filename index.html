@@ -1227,76 +1227,143 @@ Advocate [Lawyer Name]
       
       <!-- ==================== TAB 5: PROFILE SETTINGS ==================== -->
       <section class="content-section" id="section-settings" style="display: none;">
-        <div class="glass-card" style="max-width: 600px; margin: 0 auto; padding: 32px;">
-          <h2 style="margin-bottom: 24px; font-family: var(--font-serif); border-bottom: 1px solid var(--color-thread-light); padding-bottom: 12px;"><i data-lucide="settings" style="width: 24px; height: 24px; margin-right: 8px; vertical-align: bottom;"></i> Profile Settings</h2>
-          
-          <form id="settings-form" style="display: flex; flex-direction: column; gap: 20px;">
-            <div id="settings-lawyer-fields" style="display: none;">
-              <!-- Same fields as wizard for Lawyers -->
-              <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="settings-lawyer-name">
+        <div style="max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
+
+          <!-- Header Card -->
+          <div class="glass-card" style="padding: 28px 32px; display: flex; align-items: center; gap: 20px; border-left: 3px solid var(--accent-indigo);">
+            <div style="width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <i data-lucide="user-cog" style="width: 26px; height: 26px; color: white;"></i>
+            </div>
+            <div>
+              <h2 style="margin: 0 0 4px 0; font-family: var(--font-serif); font-size: 22px;">Edit Profile Settings</h2>
+              <p style="margin: 0; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);">Changes are saved to the database and reflected on your public profile instantly.</p>
+            </div>
+          </div>
+
+          <!-- Settings Form Card -->
+          <div class="glass-card" style="padding: 32px;">
+            <form id="settings-form" style="display: flex; flex-direction: column; gap: 24px;">
+
+              <!-- Section: Basic Info (shared by all users) -->
+              <div>
+                <h4 style="font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent-indigo); margin: 0 0 16px 0; display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="info" style="width: 12px; height: 12px;"></i> Basic Information
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                  <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                      <label for="settings-name-shared">Full Name</label>
+                      <input type="text" id="settings-name-shared" placeholder="Your legal full name" autocomplete="name">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                      <label for="settings-city-shared">City / Location</label>
+                      <input type="text" id="settings-city-shared" placeholder="E.g. Mumbai, Delhi" autocomplete="address-level2">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="settings-contact-shared">
+                      Direct Contact
+                      <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); margin-left: 6px;">(Email or Mobile — must be unique)</span>
+                    </label>
+                    <div style="position: relative;">
+                      <i data-lucide="at-sign" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;"></i>
+                      <input type="text" id="settings-contact-shared" placeholder="email@example.com or +91 XXXXX XXXXX" style="padding-left: 36px;" autocomplete="email">
+                    </div>
+                    <p style="margin: 6px 0 0 0; font-size: 10px; color: var(--accent-amber); font-family: var(--font-mono);">
+                      &#9888; Display-only. Your login identifier cannot be changed from here.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div class="form-row">
+
+              <hr style="border: none; border-top: 1px solid var(--color-thread-light); margin: 0;">
+
+              <!-- Section: Lawyer-only fields -->
+              <div id="lawyer-only-settings" style="display: none;">
+                <h4 style="font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent-rose); margin: 0 0 16px 0; display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="scale" style="width: 12px; height: 12px;"></i> Advocate Profile Details
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                  <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                      <label for="settings-lawyer-specialty">Practice Specialty</label>
+                      <select id="settings-lawyer-specialty">
+                        <option value="tenancy">Tenancy &amp; Housing Law</option>
+                        <option value="employment">Employment &amp; Labor Law</option>
+                        <option value="contract">Contracts &amp; Freelance</option>
+                        <option value="consumer">Consumer Protection</option>
+                        <option value="family">Family Law &amp; Divorce</option>
+                        <option value="criminal">Criminal Defense</option>
+                      </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                      <label for="settings-lawyer-exp">Years of Experience</label>
+                      <input type="number" id="settings-lawyer-exp" placeholder="E.g. 8" min="0" max="60">
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                      <label for="settings-lawyer-fought">Total Cases Handled</label>
+                      <input type="number" id="settings-lawyer-fought" placeholder="E.g. 120" min="0">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                      <label for="settings-lawyer-won">Cases Won</label>
+                      <input type="number" id="settings-lawyer-won" placeholder="E.g. 104" min="0">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="settings-lawyer-bio">Professional Bio <span style="font-size:10px;color:var(--text-muted);">(shown on your public profile)</span></label>
+                    <textarea id="settings-lawyer-bio" rows="4" placeholder="Briefly describe your expertise, approach, and specializations..."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section: Client-only fields -->
+              <div id="client-only-settings" style="display: none;">
+                <h4 style="font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent-cyan); margin: 0 0 16px 0; display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="briefcase" style="width: 12px; height: 12px;"></i> Legal Preferences
+                </h4>
                 <div class="form-group">
-                  <label>Practice Specialty</label>
-                  <select id="settings-lawyer-specialty">
-                    <option value="tenancy">Tenancy &amp; Housing Law</option>
-                    <option value="employment">Employment &amp; Labor Law</option>
-                    <option value="contract">Contracts &amp; Freelance</option>
-                    <option value="consumer">Consumer Protection</option>
-                    <option value="family">Family Law &amp; Divorce</option>
-                    <option value="criminal">Criminal Defense</option>
+                  <label for="settings-client-interest">Primary Legal Interest</label>
+                  <select id="settings-client-interest">
+                    <option value="Tenant Disputes">Tenant / Housing Disputes</option>
+                    <option value="Employment Matters">Employment / Unpaid Wages</option>
+                    <option value="Freelance Contracts">Freelance Contracts</option>
+                    <option value="Consumer Fraud">Consumer Fraud</option>
+                    <option value="Family Law">Family / Divorce Law</option>
+                    <option value="Other">Other / General Inquiry</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <label>Years of Experience</label>
-                  <input type="number" id="settings-lawyer-exp">
-                </div>
               </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Cases Fought</label>
-                  <input type="number" id="settings-lawyer-fought">
-                </div>
-                <div class="form-group">
-                  <label>Cases Won</label>
-                  <input type="number" id="settings-lawyer-won">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Short Bio</label>
-                <textarea id="settings-lawyer-bio" rows="3"></textarea>
-              </div>
-            </div>
 
-            <div id="settings-client-fields" style="display: none;">
-              <!-- Same fields as wizard for Clients -->
-              <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="settings-client-name">
-              </div>
-              <div class="form-group">
-                <label>City</label>
-                <input type="text" id="settings-client-city">
-              </div>
-              <div class="form-group">
-                <label>Primary Legal Interest</label>
-                <select id="settings-client-interest">
-                  <option value="Tenant Disputes">Tenant / Housing Disputes</option>
-                  <option value="Employment Matters">Employment / Unpaid Wages</option>
-                  <option value="Freelance Contracts">Freelance Contracts</option>
-                  <option value="Consumer Fraud">Consumer Fraud</option>
-                  <option value="Family Law">Family / Divorce Law</option>
-                  <option value="Other">Other / General Inquiry</option>
-                </select>
-              </div>
-            </div>
+              <hr style="border: none; border-top: 1px solid var(--color-thread-light); margin: 0;">
 
-            <button type="submit" class="btn btn-primary" id="btn-save-settings"><i data-lucide="save"></i> Save Changes</button>
-          </form>
+              <!-- Action Row -->
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                <p id="settings-status-msg" style="margin: 0; font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); display: none;"></p>
+                <div style="display: flex; gap: 10px; margin-left: auto;">
+                  <button type="button" id="btn-reset-settings" class="btn" style="background: transparent; border: 1px solid var(--color-thread); color: var(--text-secondary); padding: 10px 20px; font-size: 12px;">
+                    <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Reset
+                  </button>
+                  <button type="submit" class="btn btn-primary" id="btn-save-settings" style="padding: 10px 28px;">
+                    <i data-lucide="save" style="width: 14px; height: 14px;"></i> Save Profile
+                  </button>
+                </div>
+              </div>
+
+            </form>
+          </div>
+
+          <!-- Info Banner -->
+          <div style="padding: 14px 18px; background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.2); border-radius: 10px; display: flex; align-items: flex-start; gap: 10px;">
+            <i data-lucide="shield-check" style="width: 16px; height: 16px; color: var(--accent-indigo); flex-shrink: 0; margin-top: 2px;"></i>
+            <p style="margin: 0; font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono); line-height: 1.5;">
+              Your profile data is encrypted in transit. Changes to Name or Bio update your public listing immediately.
+              <strong style="color: var(--text-primary);">Contact field is for display only</strong> — your login identifier cannot be changed from here.
+            </p>
+          </div>
+
         </div>
-      </section>
       
     </main>
 

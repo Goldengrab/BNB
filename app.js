@@ -3836,96 +3836,71 @@ Advocate for Plaintiff`,
   }
 
   // ==================== SETTINGS LOGIC ====================
-  const settingsForm = document.getElementById('settings-form');
-  if (settingsForm) {
-    settingsForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('btn-save-settings');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<i data-lucide="loader-2" style="width:16px;height:16px;display:inline;margin-right:6px;"></i> Saving...';
-      btn.disabled = true;
 
-      try {
-        let endpoint = '';
-        let payload = {};
+  function populateSettingsForm() {
+    if (!state.userProfile) return;
+    const p = state.userProfile;
 
-        if (state.userType === 'lawyer') {
-          endpoint = `${API_BASE}/api/lawyers/${state.userProfile.id}`;
-          payload = {
-            name: document.getElementById('settings-lawyer-name').value,
-            specialty: document.getElementById('settings-lawyer-specialty').value,
-            exp: document.getElementById('settings-lawyer-exp').value,
-            fought: document.getElementById('settings-lawyer-fought').value,
-            won: document.getElementById('settings-lawyer-won').value,
-            bio: document.getElementById('settings-lawyer-bio').value
-          };
-        } else {
-          endpoint = `${API_BASE}/api/clients/${state.userProfile.id}`;
-          payload = {
-            name: document.getElementById('settings-client-name').value,
-            city: document.getElementById('settings-client-city').value,
-            interest: document.getElementById('settings-client-interest').value
-          };
-        }
+    // Shared fields (both roles)
+    const nameEl    = document.getElementById('settings-name-shared');
+    const cityEl    = document.getElementById('settings-city-shared');
+    const contactEl = document.getElementById('settings-contact-shared');
 
-        const res = await fetch(endpoint, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+    if (nameEl)    nameEl.value    = p.name || '';
+    if (cityEl)    cityEl.value    = p.city || p.contactInfo || '';
+    if (contactEl) contactEl.value = p.contactInfo || p.contact || '';
 
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || 'Failed to update profile');
-        }
-        const data = await res.json();
-        state.userProfile = data.user;
-        persistSession();
+    // Toggle role-specific sections
+    const lawyerSection = document.getElementById('lawyer-only-settings');
+    const clientSection = document.getElementById('client-only-settings');
 
-        // Update header name
-        const userRoleEl = document.querySelector('.user-role');
-        if (userRoleEl) userRoleEl.textContent = state.userProfile.name;
+    if (state.userType === 'lawyer') {
+      if (lawyerSection) lawyerSection.style.display = 'block';
+      if (clientSection) clientSection.style.display = 'none';
 
-        btn.innerHTML = '<i data-lucide="check" style="width:16px;height:16px;display:inline;margin-right:6px;"></i> Saved!';
-        lucide.createIcons();
-        setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; lucide.createIcons(); }, 2000);
-        return;
+      const specEl   = document.getElementById('settings-lawyer-specialty');
+      const expEl    = document.getElementById('settings-lawyer-exp');
+      const foughtEl = document.getElementById('settings-lawyer-fought');
+      const wonEl    = document.getElementById('settings-lawyer-won');
+      const bioEl    = document.getElementById('settings-lawyer-bio');
 
-      } catch (err) {
-        console.error(err);
-        alert('Error saving profile: ' + err.message);
-      }
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-      lucide.createIcons();
+      if (specEl)   specEl.value   = p.specialty || 'family';
+      if (foughtEl) foughtEl.value = p.casesHandled || 0;
+      const wr = parseInt((p.winRate || '0%').replace('%', ''));
+      if (wonEl)    wonEl.value    = Math.round((wr / 100) * (p.casesHandled || 0));
+      if (bioEl)    bioEl.value    = p.bio || '';
+      // exp is not stored in DB yet — leave blank so user can fill
+      if (expEl)    expEl.value    = '';
+    } else {
+      if (lawyerSection) lawyerSection.style.display = 'none';
+      if (clientSection) clientSection.style.display = 'block';
+
+      // For clients, city comes from their profile
+      if (cityEl) cityEl.value = p.city || '';
+
+      const interestEl = document.getElementById('settings-client-interest');
+      if (interestEl) interestEl.value = p.interest || 'Other';
+    }
+
+    lucide.createIcons();
+  }
+
+  // Intercept Settings tab click → populate form
+  const tabBtnSettings = document.getElementById('tab-btn-settings');
+  if (tabBtnSettings) {
+    tabBtnSettings.addEventListener('click', () => {
+      setTimeout(populateSettingsForm, 50);
     });
   }
 
-  // Populate Settings form when switching to that tab
-  function populateSettingsForm() {
-    if (!state.userProfile) return;
-    if (state.userType === 'lawyer') {
-      document.getElementById('settings-lawyer-fields').style.display = 'block';
-      document.getElementById('settings-client-fields').style.display = 'none';
-      document.getElementById('settings-lawyer-name').value = state.userProfile.name || '';
-      document.getElementById('settings-lawyer-specialty').value = state.userProfile.specialty || 'family';
-      const fought = state.userProfile.casesHandled || 0;
-      document.getElementById('settings-lawyer-fought').value = fought;
-      const wr = parseInt((state.userProfile.winRate || '0%').replace('%', ''));
-      document.getElementById('settings-lawyer-won').value = Math.round((wr / 100) * fought);
-      document.getElementById('settings-lawyer-bio').value = state.userProfile.bio || '';
-    } else {
-      document.getElementById('settings-lawyer-fields').style.display = 'none';
-      document.getElementById('settings-client-fields').style.display = 'block';
-      document.getElementById('settings-client-name').value = state.userProfile.name || '';
-      document.getElementById('settings-client-city').value = state.userProfile.city || '';
-      document.getElementById('settings-client-interest').value = state.userProfile.interest || 'Other';
-    }
+  // Reset button → re-populate from current state
+  const btnResetSettings = document.getElementById('btn-reset-settings');
+  if (btnResetSettings) {
+    btnResetSettings.addEventListener('click', () => {
+      populateSettingsForm();
+      const statusMsg = document.getElementById('settings-status-msg');
+      if (statusMsg) { statusMsg.style.display = 'none'; statusMsg.textContent = ''; }
+    });
   }
-
-  // Intercept settings tab click to populate form
-  document.getElementById('tab-btn-settings').addEventListener('click', () => {
-    setTimeout(populateSettingsForm, 50);
-  });
 
 });
