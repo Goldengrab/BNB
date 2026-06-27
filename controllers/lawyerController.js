@@ -11,6 +11,24 @@ const SPECIALTY_LABELS = {
 };
 
 /**
+ * Checks if an error is a database-level unique constraint violation.
+ * Handles LibSQL/SQLite (UNIQUE constraint failed),
+ * MySQL (ER_DUP_ENTRY), and PostgreSQL (23505) errors.
+ */
+function isDuplicateEntryError(error) {
+  if (!error) return false;
+  const msg = (error.message || '').toLowerCase();
+  const code = error.code || '';
+  return (
+    msg.includes('unique constraint failed') ||
+    msg.includes('unique constraint') ||
+    code === 'ER_DUP_ENTRY' ||
+    code === '23505' ||
+    code === 'SQLITE_CONSTRAINT_UNIQUE'
+  );
+}
+
+/**
  * Get all registered advocates
  */
 export async function getAllLawyers(req, res) {
@@ -315,6 +333,13 @@ export async function registerLawyer(req, res) {
 
   } catch (error) {
     console.error("Error registering lawyer:", error);
+    // Catch database-level unique constraint violations (LibSQL/SQLite, MySQL, Postgres)
+    if (isDuplicateEntryError(error)) {
+      return res.status(409).json({
+        error: "UserAlreadyExists",
+        message: "Account already exists. Please log in."
+      });
+    }
     return res.status(500).json({ error: "Internal Server Error during registration." });
   }
 }
@@ -376,6 +401,13 @@ export async function updateLawyerProfile(req, res) {
     return res.status(200).json({ message: 'Profile updated successfully.', user: lawyer });
   } catch (error) {
     console.error('Error updating lawyer:', error);
+    // Catch database-level unique constraint violations
+    if (isDuplicateEntryError(error)) {
+      return res.status(409).json({
+        error: "UserAlreadyExists",
+        message: "Account already exists. Please log in."
+      });
+    }
     return res.status(500).json({ error: 'Internal Server Error during profile update.' });
   }
 }
