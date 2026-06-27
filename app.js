@@ -11,11 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const PRODUCTION_BACKEND_URL = ''; 
 
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const API_BASE = window.location.port === '3000' 
-    ? '' 
-    : (isLocalhost 
-        ? `${window.location.protocol}//${window.location.hostname}:3000` 
-        : (PRODUCTION_BACKEND_URL || 'http://localhost:3000'));
+  const API_BASE = (isLocalhost && window.location.port !== '3000') 
+    ? `${window.location.protocol}//${window.location.hostname}:3000` 
+    : '';
 
   // ==================== SESSION PERSISTENCE HELPERS ====================
   function persistSession() {
