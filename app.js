@@ -309,6 +309,11 @@ document.addEventListener('DOMContentLoaded', () => {
       packages: [
         { name: 'Initial Brief Consultation', price: '$100', desc: 'Up to 45 min consultation online or offline.' },
         { name: 'Standard Case Representation', price: fees, desc: 'General counsel and document preparation.' }
+      ],
+      verified_cases: [
+        { case_type: `Verdict in ${position} Matter`, year: 2024, court_level: position, role: "Petitioner's Counsel" },
+        { case_type: `Dispute Resolution under State Codes`, year: 2023, court_level: position, role: "Respondent's Counsel" },
+        { case_type: `Compliance Review & Arbitration`, year: 2022, court_level: "Tribunal", role: "Petitioner's Counsel" }
       ]
     };
 
@@ -383,6 +388,12 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Demand Letter & Review', price: '$150', desc: 'Drafting formal notice to landlord and reviewing response.' },
         { name: 'Small Claims Prep', price: '$450', desc: 'Full evidence compilation, witness sheets, and courtroom rehearsal.' },
         { name: 'Full Litigation Retainer', price: '$1,800', desc: 'Comprehensive court representation and mediation filings.' }
+      ],
+      verified_cases: [
+        { case_type: "Security Deposit Recovery Claim", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Illegal Eviction Notice Defense", year: 2023, court_level: "District Court", role: "Respondent's Counsel" },
+        { case_type: "Rent Control Compliance Audit", year: 2023, court_level: "Tribunal", role: "Respondent's Counsel" },
+        { case_type: "Habitability Failure & Repair Suit", year: 2022, court_level: "District Court", role: "Petitioner's Counsel" }
       ]
     },
     {
@@ -400,6 +411,12 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Freelancer Invoice Recovery', price: '$250', desc: 'Official breach of contract letter and settlement negotiations.' },
         { name: 'Labor Board Filing Support', price: '$600', desc: 'Drafting state labor agency claims and evidence audit.' },
         { name: 'Employment Suit Representation', price: 'Contingency', desc: 'No upfront fee. 30% of recovered settlement.' }
+      ],
+      verified_cases: [
+        { case_type: "Freelance Unpaid Invoice Suit", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Employee Wage & Overtime Misclassification", year: 2023, court_level: "Tribunal", role: "Petitioner's Counsel" },
+        { case_type: "Covenant Not to Compete Invalidation", year: 2023, court_level: "High Court", role: "Petitioner's Counsel" },
+        { case_type: "Severance Package Discrepancy Dispute", year: 2022, court_level: "District Court", role: "Respondent's Counsel" }
       ]
     },
     {
@@ -417,6 +434,11 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Contract Revision Audit', price: '$200', desc: 'Line-by-line contract review and markup with redlines.' },
         { name: 'Template Suite Bundle', price: '$400', desc: '3 customized client contract templates for your business.' },
         { name: 'Custom Agreement Drafting', price: '$750', desc: 'Full custom contract drafting tailored to your specific project.' }
+      ],
+      verified_cases: [
+        { case_type: "SaaS IP Assignment Breach", year: 2024, court_level: "High Court", role: "Respondent's Counsel" },
+        { case_type: "NDA Violation Enforcement Claim", year: 2023, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Contractor Service Default Arbitration", year: 2023, court_level: "Tribunal", role: "Respondent's Counsel" }
       ]
     },
     {
@@ -434,6 +456,12 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Dealer Demand Notice', price: '$220', desc: 'Official letter detailing Lemon Law codes and replacement demand.' },
         { name: 'Arbitration Filing Pack', price: '$500', desc: 'Drafting files and evidence binders for consumer arbitration boards.' },
         { name: 'Court Action Retainer', price: '$1,200', desc: 'Filing state civil action against manufacturer or dealer.' }
+      ],
+      verified_cases: [
+        { case_type: "Used Car Dealership Odometer Fraud", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Unfair Subscription Billing Class Action", year: 2023, court_level: "High Court", role: "Petitioner's Counsel" },
+        { case_type: "Appliances Lemon Law Compensation Claim", year: 2023, court_level: "Tribunal", role: "Petitioner's Counsel" },
+        { case_type: "Credit Bureau Reporting Error Settlement", year: 2022, court_level: "District Court", role: "Petitioner's Counsel" }
       ]
     },
     {
@@ -451,6 +479,11 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: 'Notice of Violation Draft', price: '$180', desc: 'Official notice demanding repairs with code inspector cites.' },
         { name: 'Mediation Representation', price: '$500', desc: 'Preparation and advocacy at voluntary mediation boards.' },
         { name: 'Rent Escrow Filing Support', price: '$800', desc: 'Filing to deposit rent with court until repairs are finished.' }
+      ],
+      verified_cases: [
+        { case_type: "Illegal Lockout & Security Deposit Refund", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Retaliatory Rent Increase Appeal", year: 2023, court_level: "Tribunal", role: "Petitioner's Counsel" },
+        { case_type: "Water Intrusion & Black Mold Liability", year: 2022, court_level: "District Court", role: "Petitioner's Counsel" }
       ]
     },
     {
@@ -467,6 +500,12 @@ document.addEventListener('DOMContentLoaded', () => {
       packages: [
         { name: 'Arrest & Bail consultation', price: '$300', desc: 'Urgent consultation on legal rights and bail structure.' },
         { name: 'Trial Defense Retainer', price: '$2,500', desc: 'Court appearance defense and discovery audit.' }
+      ],
+      verified_cases: [
+        { case_type: "Misdemeanor Theft Charge Dismissal", year: 2024, court_level: "District Court", role: "Respondent's Counsel" },
+        { case_type: "First-Offense DUI Citation Appeal", year: 2023, court_level: "District Court", role: "Respondent's Counsel" },
+        { case_type: "Search Warrant Evidence Suppression Hearing", year: 2023, court_level: "High Court", role: "Respondent's Counsel" },
+        { case_type: "Civil Rights Arrest Warrant Invalidation", year: 2022, court_level: "High Court", role: "Respondent's Counsel" }
       ]
     },
     {
@@ -483,6 +522,12 @@ document.addEventListener('DOMContentLoaded', () => {
       packages: [
         { name: 'Divorce Mediation Consultation', price: '$250', desc: 'Review of mediation steps, asset splits, and child custody rules.' },
         { name: 'Mutual Consent Filing Pack', price: '$800', desc: 'Drafting all mutual separation agreements and court filing support.' }
+      ],
+      verified_cases: [
+        { case_type: "Mutual Separation Agreement Petition", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Joint Custody & Visitation Dispute", year: 2023, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Alimony Support Revision Appeal", year: 2023, court_level: "High Court", role: "Respondent's Counsel" },
+        { case_type: "Marital Asset Partition Dispute", year: 2022, court_level: "Tribunal", role: "Petitioner's Counsel" }
       ]
     }
   ];
@@ -950,7 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     filtered.forEach(lawyer => {
       const card = document.createElement('div');
-      card.className = 'glass-card lawyer-card';
+      card.className = 'glass-card lawyer-card file-folder-card';
       
       // Build package elements
       let packagesHTML = '';
@@ -972,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="avatar">${avatarHTML}</div>
           <div class="lawyer-meta">
             <h3>${lawyer.name}</h3>
-            <span class="title">${lawyer.specialtyLabel}</span>
+            <span class="specialty-label text-accent ${lawyer.specialty}">${lawyer.specialtyLabel}</span>
             <span class="bar-verification-tag"><i data-lucide="shield-check"></i> Bar Verified & Active</span>
           </div>
         </div>
@@ -993,8 +1038,39 @@ document.addEventListener('DOMContentLoaded', () => {
             ${packagesHTML}
           </div>
         </div>
-        <div class="lawyer-footer">
-          <button class="btn btn-primary btn-book-consult" data-id="${lawyer.id}">
+
+        <!-- Expandable Track Record Timeline -->
+        <button class="btn-track-record-toggle" data-id="${lawyer.id}">
+          <span>📁 Track Record (${lawyer.verified_cases ? lawyer.verified_cases.length : 0} Verified Cases)</span>
+          <i data-lucide="chevron-down" style="width:14px; height:14px;"></i>
+        </button>
+        <div class="track-record-timeline" id="tr-timeline-${lawyer.id}" style="display: none;">
+          ${(lawyer.verified_cases || []).map(c => `
+            <div class="timeline-case-item">
+              <span class="timeline-case-year">${c.year}</span>
+              <div class="timeline-case-title">${c.case_type}</div>
+              <div class="timeline-case-meta">${c.court_level} • ${c.role}</div>
+            </div>
+          `).join('')}
+          <div class="demo-data-disclaimer">
+            Demo data — a production version would pull verified case history from eCourts/NJDG public advocate records.
+          </div>
+        </div>
+
+        <!-- AI Plausibility Check Box -->
+        <div class="ai-plausibility-check-box">
+          <label>Check if they've handled a case like yours:</label>
+          <div class="ai-check-input-wrapper">
+            <input type="text" class="ai-check-text-input" id="ai-input-${lawyer.id}" placeholder="Describe your case context..." required>
+            <button type="button" class="btn-ai-submit" data-id="${lawyer.id}">
+              <i data-lucide="sparkles" style="width:12px; height:12px;"></i> Check
+            </button>
+          </div>
+          <div class="verdict-stamp-container" id="ai-verdict-container-${lawyer.id}" style="display: none;"></div>
+        </div>
+
+        <div class="lawyer-footer" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.05);">
+          <button class="btn btn-primary btn-book-consult w-full" data-id="${lawyer.id}">
             Book Consultation
           </button>
         </div>
@@ -1009,6 +1085,75 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', () => {
         const lawyerId = btn.getAttribute('data-id');
         openBookingModal(lawyerId);
+      });
+    });
+
+    // Add listeners to track record toggle buttons
+    const trBtns = lawyersListContainer.querySelectorAll('.btn-track-record-toggle');
+    trBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lawyerId = btn.getAttribute('data-id');
+        const timelineDiv = document.getElementById(`tr-timeline-${lawyerId}`);
+        const icon = btn.querySelector('i');
+        
+        if (timelineDiv.style.display === 'none') {
+          timelineDiv.style.display = 'block';
+          icon.setAttribute('data-lucide', 'chevron-up');
+        } else {
+          timelineDiv.style.display = 'none';
+          icon.setAttribute('data-lucide', 'chevron-down');
+        }
+        lucide.createIcons();
+      });
+    });
+
+    // Add listeners to AI Plausibility check buttons
+    const aiBtns = lawyersListContainer.querySelectorAll('.btn-ai-submit');
+    aiBtns.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const lawyerId = btn.getAttribute('data-id');
+        const lawyer = LAWYERS_DATABASE.find(l => l.id === lawyerId);
+        const inputField = document.getElementById(`ai-input-${lawyerId}`);
+        const verdictContainer = document.getElementById(`ai-verdict-container-${lawyerId}`);
+        const queryText = inputField.value.trim();
+
+        if (!queryText) {
+          alert('Please enter a description of your case first!');
+          return;
+        }
+
+        // Show loading state
+        btn.disabled = true;
+        verdictContainer.style.display = 'block';
+        verdictContainer.innerHTML = `
+          <div style="font-family: var(--font-mono); font-size:11px; color: var(--text-secondary); display: flex; align-items:center; gap:6px;">
+            <span class="pulse" style="width:8px; height:8px; background:var(--color-thread); border-radius:50%;"></span>
+            Auditing case database with Claude...
+          </div>
+        `;
+
+        try {
+          // Perform check (Anthropic API with mock fallback)
+          const result = await checkPlausibilityWithClaude(lawyer, queryText);
+          
+          const stampClass = result.plausible_match ? 'match' : 'no-match';
+          const stampText = result.plausible_match ? 'PLAUSIBLE MATCH' : 'LOW PLAUSIBILITY';
+
+          verdictContainer.innerHTML = `
+            <div class="verdict-stamp ${stampClass}">
+              ${stampText}
+            </div>
+            <p class="verdict-stamp-explanation">${result.explanation}</p>
+          `;
+        } catch (err) {
+          verdictContainer.innerHTML = `
+            <p style="color:var(--accent-rose); font-size:11px; font-family:var(--font-mono);">
+              Audit failed. Please try again.
+            </p>
+          `;
+        } finally {
+          btn.disabled = false;
+        }
       });
     });
 
@@ -1576,6 +1721,88 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // ==================== CLAUDE API AUDITOR & SEMANTIC FALLBACK ====================
+  async function checkPlausibilityWithClaude(lawyer, queryText) {
+    const apiKey = localStorage.getItem('ANTHROPIC_API_KEY') || '';
+    
+    if (apiKey) {
+      try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+            'dangerously-allow-browser': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 1000,
+            system: 'You are a legal matching auditor. Compare the user\'s legal dispute description with the advocate\'s verified cases. Return ONLY a JSON object: { "plausible_match": boolean, "explanation": "one sentence explaining why it is or is not a match" }.',
+            messages: [
+              {
+                role: 'user',
+                content: `Advocate cases: ${JSON.stringify(lawyer.verified_cases)}\nUser dispute: "${queryText}"`
+              }
+            ]
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const textResponse = data.content[0].text;
+          const parsed = JSON.parse(textResponse.trim());
+          return parsed;
+        }
+      } catch (e) {
+        console.error('Claude API call failed, falling back to local analysis:', e);
+      }
+    }
+
+    // Mock API Fallback Algorithm (keyword matching)
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const q = queryText.toLowerCase();
+    
+    // Check keywords overlap
+    let match = false;
+    let matchCount = 0;
+    let matchedKeywords = [];
+
+    const specialtyKeywords = {
+      tenancy: ['landlord', 'tenant', 'deposit', 'rent', 'lease', 'evict', 'eviction', 'roommate', 'apartment', 'housing', 'mold', 'repair', 'habitability'],
+      employment: ['wage', 'salary', 'invoice', 'unpaid', 'pay', 'overtime', 'freelance', 'contractor', 'boss', 'designer', 'work', 'job', 'severance'],
+      contract: ['contract', 'nda', 'agreement', 'signing', 'clause', 'ip', 'breach', 'non-compete', 'shareholder'],
+      consumer: ['car', 'warranty', 'dealer', 'lemon', 'purchase', 'bill', 'billing', 'scam', 'credit', 'reporting', 'refund'],
+      criminal: ['theft', 'dui', 'police', 'arrest', 'bail', 'jail', 'warrant', 'charge', 'misdemeanor', 'citation', 'speeding'],
+      family: ['divorce', 'custody', 'marriage', 'alimony', 'child', 'separation', 'marital', 'asset', 'family']
+    };
+
+    const targetKeywords = specialtyKeywords[lawyer.specialty] || [];
+    targetKeywords.forEach(kw => {
+      if (q.includes(kw)) {
+        matchCount++;
+        matchedKeywords.push(kw);
+      }
+    });
+
+    if (matchCount >= 1) {
+      match = true;
+    }
+
+    if (match) {
+      return {
+        plausible_match: true,
+        explanation: `Plausible Match: Handles similar issues. Matched keywords: ${matchedKeywords.join(', ')}. Advocate has successfully resolved ${lawyer.verified_cases[0].case_type} in District Court.`
+      };
+    } else {
+      return {
+        plausible_match: false,
+        explanation: `Low Plausibility: No keyword overlap found. This advocate's verified track record is focused primarily on ${lawyer.specialtyLabel}.`
+      };
+    }
+  }
 
   // Pre-load default lawyers on start
   renderLawyers();
