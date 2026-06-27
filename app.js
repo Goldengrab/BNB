@@ -7,7 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
 
   // Dynamic API Base URL to allow client-side preview on other servers (e.g. Live Server on port 5500) while communicating with backend on port 3000
-  const API_BASE = window.location.port === '3000' ? '' : 'http://localhost:3000';
+  const API_BASE = window.location.port === '3000' 
+    ? '' 
+    : (window.location.hostname ? `${window.location.protocol}//${window.location.hostname}:3000` : 'http://localhost:3000');
 
   // ==================== STATE MANAGEMENT ====================
   const state = {
