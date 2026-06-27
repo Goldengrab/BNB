@@ -38,19 +38,19 @@ app.get("*", (req, res, next) => {
 });
 
 // Initialize database and start listening
-async function startServer() {
-  try {
-    await initDb();
-    app.listen(PORT, () => {
-      console.log(`==================================================`);
-      console.log(`AEQUITAS CORE BACKEND RUNNING`);
-      console.log(`Local Access: http://localhost:${PORT}`);
-      console.log(`==================================================`);
-    });
-  } catch (error) {
-    console.error("Critical: Failed to launch database and backend server:", error);
-    process.exit(1);
-  }
+try {
+  await initDb();
+} catch (error) {
+  console.error("Critical: Failed to launch database schemas:", error);
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`==================================================`);
+    console.log(`AEQUITAS CORE BACKEND RUNNING`);
+    console.log(`Local Access: http://localhost:${PORT}`);
+    console.log(`==================================================`);
+  });
+}
+
+export default app;
