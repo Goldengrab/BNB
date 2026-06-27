@@ -99,6 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     linkSwitchRole.style.display = 'inline-block';
+    const _myAccLink = document.getElementById('link-my-account');
+    if (_myAccLink) _myAccLink.style.display = 'inline-block';
     updateNavForUserRole();
     switchTab('workspace');
     onboardingOverlay.style.display = 'none';
@@ -157,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const onboardingStepAdvocateSignup = document.getElementById('onboarding-step-advocate-signup');
   const advocateSignupForm = document.getElementById('advocate-signup-form');
   const linkSwitchRole = document.getElementById('link-switch-role');
+  const linkMyAccount = document.getElementById('link-my-account');
 
   // Avatar inputs
   const clientAvatarFile = document.getElementById('client-avatar-file');
@@ -226,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     linkSwitchRole.style.display = 'none';
+    if (linkMyAccount) linkMyAccount.style.display = 'none';
 
     // Show step 1 of onboarding again
     onboardingStep1.style.display = 'flex';
@@ -239,6 +243,107 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNavForUserRole();
     switchTab('analyzer');
   });
+
+  // ==================== MY ACCOUNT MODAL ====================
+  const myAccountModal = document.getElementById('my-account-modal');
+  const btnCloseAccountModal = document.getElementById('btn-close-account-modal');
+  const btnDeleteAccount = document.getElementById('btn-delete-account');
+
+  if (linkMyAccount) {
+    linkMyAccount.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!state.userProfile) return;
+
+      // Populate modal
+      const nameEl = document.getElementById('account-modal-name');
+      const roleEl = document.getElementById('account-modal-role-badge');
+      const avatarEl = document.getElementById('account-modal-avatar');
+      const verificationEl = document.getElementById('account-modal-verification');
+      const barCouncilEl = document.getElementById('account-modal-bar-council-id');
+
+      nameEl.textContent = state.userProfile.name;
+      roleEl.textContent = state.userType === 'lawyer' ? '⚖ Advocate Account' : '👤 Client Account';
+
+      const avatarSrc = state.userType === 'lawyer' ? state.userProfile.avatarBase64 : state.userProfile.avatar;
+      if (avatarSrc) {
+        avatarEl.innerHTML = `<img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      } else {
+        const initials = state.userType === 'lawyer'
+          ? (state.userProfile.avatarText || 'AV')
+          : (state.userProfile.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'CL');
+        avatarEl.style.color = 'white';
+        avatarEl.style.fontSize = '18px';
+        avatarEl.style.fontWeight = 'bold';
+        avatarEl.textContent = initials;
+      }
+
+      if (state.userType === 'lawyer') {
+        verificationEl.style.display = 'block';
+        if (state.userProfile.barCouncilId) {
+          barCouncilEl.textContent = `Bar Council ID: ${state.userProfile.barCouncilId}`;
+        } else {
+          barCouncilEl.textContent = 'No Bar Council ID submitted.';
+        }
+      } else {
+        verificationEl.style.display = 'none';
+      }
+
+      myAccountModal.style.display = 'flex';
+      lucide.createIcons();
+    });
+  }
+
+  if (btnCloseAccountModal) {
+    btnCloseAccountModal.addEventListener('click', () => {
+      myAccountModal.style.display = 'none';
+    });
+  }
+
+  // Close modal on backdrop click
+  if (myAccountModal) {
+    myAccountModal.addEventListener('click', (e) => {
+      if (e.target === myAccountModal) myAccountModal.style.display = 'none';
+    });
+  }
+
+  // Delete account
+  if (btnDeleteAccount) {
+    btnDeleteAccount.addEventListener('click', async () => {
+      if (!state.userProfile || !state.userType) return;
+
+      const confirmDelete = confirm(`Are you sure you want to permanently delete your account as "${state.userProfile.name}"? This cannot be undone.`);
+      if (!confirmDelete) return;
+
+      try {
+        const endpoint = state.userType === 'lawyer'
+          ? `${API_BASE}/api/lawyers/${state.userProfile.id}`
+          : `${API_BASE}/api/clients/${state.userProfile.id}`;
+
+        const res = await fetch(endpoint, { method: 'DELETE' });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Deletion failed.');
+        }
+
+        // Remove from local DB if lawyer
+        if (state.userType === 'lawyer') {
+          const idx = LAWYERS_DATABASE.findIndex(l => l.id === state.userProfile.id);
+          if (idx > -1) LAWYERS_DATABASE.splice(idx, 1);
+          renderLawyers();
+        }
+
+        myAccountModal.style.display = 'none';
+        alert('Your account has been deleted successfully.');
+
+        // Log out
+        linkSwitchRole.click();
+      } catch (err) {
+        console.error('Delete account error:', err);
+        alert(`Failed to delete account: ${err.message}`);
+      }
+    });
+  }
+
 
   // Step 1: Submit Contact info
   authForm.addEventListener('submit', (e) => {
@@ -427,8 +532,10 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           linkSwitchRole.style.display = 'inline-block';
+          if (linkMyAccount) linkMyAccount.style.display = 'inline-block';
           updateNavForUserRole();
           switchTab('workspace');
+          onboardingOverlay.style.display = 'none';
           persistSession();
           lucide.createIcons();
           return;
@@ -493,6 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
       linkSwitchRole.style.display = 'inline-block';
       updateNavForUserRole();
       switchTab('workspace');
+      onboardingOverlay.style.display = 'none';
       persistSession();
     } else {
       // Route to appropriate profile builder
@@ -538,6 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = document.getElementById('client-name').value.trim();
     const city = document.getElementById('client-city').value.trim();
     const interestVal = document.getElementById('client-interest').value;
+    const password = document.getElementById('client-password') ? document.getElementById('client-password').value : null;
 
     try {
       const response = await fetch(`${API_BASE}/api/clients`, {
@@ -548,7 +657,8 @@ document.addEventListener('DOMContentLoaded', () => {
           city: city,
           contact: onboardingContactVal,
           avatar: clientAvatarBase64,
-          interest: interestVal
+          interest: interestVal,
+          password: password || null
         })
       });
 
@@ -613,6 +723,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Hide onboarding overlay
       onboardingOverlay.style.display = 'none';
+      linkSwitchRole.style.display = 'inline-block';
+      if (linkMyAccount) linkMyAccount.style.display = 'inline-block';
       persistSession();
     } catch (err) {
       console.warn('Backend client registration failed, falling back to local session:', err);
@@ -679,6 +791,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Hide onboarding overlay
       onboardingOverlay.style.display = 'none';
+      linkSwitchRole.style.display = 'inline-block';
+      if (linkMyAccount) linkMyAccount.style.display = 'inline-block';
       persistSession();
     }
   });
@@ -696,6 +810,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ongoing = parseInt(document.getElementById('lawyer-ongoing').value);
     const fees = document.getElementById('lawyer-fees').value.trim();
     const contactInfo = document.getElementById('lawyer-contact-info').value.trim();
+    const barCouncilId = document.getElementById('signup-bar-council-id') ? document.getElementById('signup-bar-council-id').value.trim() : null;
+    const password = document.getElementById('signup-lawyer-password') ? document.getElementById('signup-lawyer-password').value : null;
 
     try {
       const response = await fetch(`${API_BASE}/api/lawyers`, {
@@ -712,7 +828,9 @@ document.addEventListener('DOMContentLoaded', () => {
           ongoing,
           fees,
           contactInfo,
-          avatarBase64: lawyerAvatarBase64
+          avatarBase64: lawyerAvatarBase64,
+          barCouncilId: barCouncilId || null,
+          password: password || null
         })
       });
 
@@ -779,6 +897,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Route to Case Workspace caseload page
       switchTab('workspace');
+      linkSwitchRole.style.display = 'inline-block';
+      if (linkMyAccount) linkMyAccount.style.display = 'inline-block';
       persistSession();
     } catch (err) {
       console.warn('Backend lawyer registration failed, falling back to local session:', err);
@@ -865,6 +985,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Route to Case Workspace caseload page
       switchTab('workspace');
+      linkSwitchRole.style.display = 'inline-block';
+      if (linkMyAccount) linkMyAccount.style.display = 'inline-block';
       persistSession();
     }
   });

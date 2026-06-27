@@ -1,11 +1,11 @@
 import db from "../config/db.js";
 
 /**
- * Log in / check if user exists by contact info
+ * Log in / check if user exists by contact info + optional password
  */
 export async function loginUser(req, res) {
   try {
-    const { contact, role } = req.body;
+    const { contact, role, password } = req.body;
 
     if (!contact || contact.trim() === "") {
       return res.status(400).json({ error: "Contact value is required." });
@@ -22,6 +22,12 @@ export async function loginUser(req, res) {
 
       if (result.rows.length > 0) {
         const row = result.rows[0];
+
+        // If password is set in DB and provided in request, validate it
+        if (row.password && password && row.password !== password) {
+          return res.status(401).json({ exists: true, error: "Incorrect password." });
+        }
+
         const lawyer = {
           id: row.id,
           name: row.name,
@@ -34,6 +40,8 @@ export async function loginUser(req, res) {
           winRate: row.win_rate,
           bio: row.bio,
           barNumber: row.bar_number,
+          barCouncilId: row.bar_council_id,
+          verificationStatus: row.verification_status || 'pending',
           contactInfo: row.contact_info,
           packages: JSON.parse(row.packages),
           verified_cases: JSON.parse(row.verified_cases)
@@ -49,6 +57,12 @@ export async function loginUser(req, res) {
 
       if (result.rows.length > 0) {
         const row = result.rows[0];
+
+        // If password is set in DB and provided in request, validate it
+        if (row.password && password && row.password !== password) {
+          return res.status(401).json({ exists: true, error: "Incorrect password." });
+        }
+
         const client = {
           id: row.id,
           name: row.name,

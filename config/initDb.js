@@ -177,11 +177,19 @@ export async function initDb() {
       win_rate TEXT NOT NULL,
       bio TEXT NOT NULL,
       bar_number TEXT NOT NULL,
+      bar_council_id TEXT,
+      verification_status TEXT NOT NULL DEFAULT 'pending',
+      password TEXT,
       contact_info TEXT,
       packages TEXT NOT NULL, -- JSON string
       verified_cases TEXT NOT NULL -- JSON string
     )
   `);
+
+  // Add new columns to existing lawyers table if they don't exist (migration)
+  try { await db.execute(`ALTER TABLE lawyers ADD COLUMN bar_council_id TEXT`); } catch(_) {}
+  try { await db.execute(`ALTER TABLE lawyers ADD COLUMN verification_status TEXT NOT NULL DEFAULT 'pending'`); } catch(_) {}
+  try { await db.execute(`ALTER TABLE lawyers ADD COLUMN password TEXT`); } catch(_) {}
 
   // Create clients table
   await db.execute(`
@@ -191,9 +199,13 @@ export async function initDb() {
       city TEXT NOT NULL,
       contact TEXT NOT NULL,
       avatar TEXT,
-      interest TEXT NOT NULL
+      interest TEXT NOT NULL,
+      password TEXT
     )
   `);
+
+  // Add password column to existing clients table if it doesn't exist (migration)
+  try { await db.execute(`ALTER TABLE clients ADD COLUMN password TEXT`); } catch(_) {}
 
   console.log("Tables validated / created.");
 

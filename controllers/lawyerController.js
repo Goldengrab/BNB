@@ -29,20 +29,86 @@ export async function getAllLawyers(req, res) {
         winRate: row.win_rate,
         bio: row.bio,
         barNumber: row.bar_number,
+        barCouncilId: row.bar_council_id,
+        verificationStatus: row.verification_status || 'pending',
         contactInfo: row.contact_info,
         packages: JSON.parse(row.packages),
         verified_cases: JSON.parse(row.verified_cases)
       };
     });
 
-    // Sort to place newest or custom added lawyers at the top
-    // For demo purposes, we will return them in the database order (seeds first, then registrations)
-    // To ensure new registers are at top, we can reverse the list or order by a timestamp if we added one.
-    // Let's reverse the array so newest registrations appear first in the directory list.
     return res.status(200).json(lawyers.reverse());
   } catch (error) {
     console.error("Error retrieving lawyers:", error);
     return res.status(500).json({ error: "Internal Server Error fetching advocates directory." });
+  }
+}
+
+/**
+ * Get a single advocate by ID
+ */
+export async function getLawyerById(req, res) {
+  try {
+    const { id } = req.params;
+    const result = await db.execute({
+      sql: "SELECT * FROM lawyers WHERE id = ?",
+      args: [id]
+    });
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Advocate not found." });
+    }
+
+    const row = result.rows[0];
+    return res.status(200).json({
+      id: row.id,
+      name: row.name,
+      specialty: row.specialty,
+      specialtyLabel: row.specialty_label,
+      avatarText: row.avatar_text,
+      avatarBase64: row.avatar_base64,
+      rating: row.rating,
+      casesHandled: Number(row.cases_handled),
+      winRate: row.win_rate,
+      bio: row.bio,
+      barNumber: row.bar_number,
+      barCouncilId: row.bar_council_id,
+      verificationStatus: row.verification_status || 'pending',
+      contactInfo: row.contact_info,
+      packages: JSON.parse(row.packages),
+      verified_cases: JSON.parse(row.verified_cases)
+    });
+  } catch (error) {
+    console.error("Error retrieving lawyer by ID:", error);
+    return res.status(500).json({ error: "Internal Server Error." });
+  }
+}
+
+/**
+ * Delete an advocate account by ID
+ */
+export async function deleteLawyer(req, res) {
+  try {
+    const { id } = req.params;
+
+    const check = await db.execute({
+      sql: "SELECT id FROM lawyers WHERE id = ?",
+      args: [id]
+    });
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: "Advocate not found." });
+    }
+
+    await db.execute({
+      sql: "DELETE FROM lawyers WHERE id = ?",
+      args: [id]
+    });
+
+    return res.status(200).json({ message: "Advocate account deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting lawyer:", error);
+    return res.status(500).json({ error: "Internal Server Error during account deletion." });
   }
 }
 
@@ -63,7 +129,9 @@ export async function registerLawyer(req, res) {
       won,
       fees,
       contactInfo,
-      avatarBase64
+      avatarBase64,
+      barCouncilId,
+      password
     } = req.body;
 
     // Validation
@@ -134,7 +202,7 @@ export async function registerLawyer(req, res) {
 
     // Packages array
     const packages = [
-      { name: "Initial Brief Consultation", price: "$100", desc: "Up to 45 min consultation online or offline." },
+      { name: "Initial Brief Consultation", price: "₹1,000", desc: "Up to 45 min consultation online or offline." },
       { name: "Standard Case Representation", price: fees, desc: "General counsel and document preparation." }
     ];
 
@@ -145,10 +213,10 @@ export async function registerLawyer(req, res) {
       { case_type: `Compliance Review & Arbitration`, year: 2022, court_level: "Tribunal", role: "Petitioner's Counsel" }
     ];
 
-    // Insert record
+    // Insert record — verification_status always 'pending' on registration
     await db.execute({
-      sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, contact_info, packages, verified_cases) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, bar_council_id, verification_status, password, contact_info, packages, verified_cases) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
       args: [
         finalId,
         name.trim(),
@@ -156,11 +224,13 @@ export async function registerLawyer(req, res) {
         specialtyLabel,
         avatarText,
         avatarBase64 || null,
-        "5.0", // New lawyer rating starts at 5.0
+        "5.0",
         parsedFought,
         winRate,
         bio,
         barNumber,
+        barCouncilId || null,
+        password || null,
         contactInfo || null,
         JSON.stringify(packages),
         JSON.stringify(verifiedCases)
@@ -179,6 +249,8 @@ export async function registerLawyer(req, res) {
       winRate,
       bio,
       barNumber,
+      barCouncilId: barCouncilId || null,
+      verificationStatus: "pending",
       contactInfo,
       packages,
       verified_cases: verifiedCases
