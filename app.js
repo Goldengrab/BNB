@@ -219,59 +219,78 @@ document.addEventListener('DOMContentLoaded', () => {
     const city = document.getElementById('client-city').value.trim();
     const interestVal = document.getElementById('client-interest').value;
 
-    state.userType = 'client';
-    state.userProfile = {
-      name: name,
-      city: city,
+    const requestBody = {
+      name,
+      city,
       contact: onboardingContactVal,
       avatar: clientAvatarBase64,
       interest: interestVal
     };
 
-    // Update Client Status UI in header
-    const userRoleEl = document.querySelector('.user-role');
-    const statusTextEl = document.querySelector('.status-text');
-    const statusIndicator = document.querySelector('.status-indicator');
-    
-    userRoleEl.textContent = name;
-    statusTextEl.textContent = `${city} • Client`;
-    statusIndicator.className = 'status-indicator active';
-    statusIndicator.style.backgroundColor = 'var(--accent-indigo)';
+    fetch('/api/clients', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Client profile registration failed.');
+      return res.json();
+    })
+    .then(data => {
+      state.userType = 'client';
+      state.userProfile = data.client;
 
-    // Update avatar circle in header status card
-    const userStatusCard = document.getElementById('user-status');
-    let avatarCircle = userStatusCard.querySelector('.avatar-header-circle');
-    if (!avatarCircle) {
-      avatarCircle = document.createElement('div');
-      avatarCircle.className = 'avatar-header-circle';
-      avatarCircle.style.width = '32px';
-      avatarCircle.style.height = '32px';
-      avatarCircle.style.borderRadius = '50%';
-      avatarCircle.style.marginRight = '8px';
-      avatarCircle.style.overflow = 'hidden';
-      avatarCircle.style.background = 'linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan))';
-      avatarCircle.style.display = 'flex';
-      avatarCircle.style.alignItems = 'center';
-      avatarCircle.style.justify = 'center';
-      avatarCircle.style.color = 'white';
-      avatarCircle.style.fontSize = '10px';
-      avatarCircle.style.fontWeight = 'bold';
+      // Update Client Status UI in header
+      const userRoleEl = document.querySelector('.user-role');
+      const statusTextEl = document.querySelector('.status-text');
+      const statusIndicator = document.querySelector('.status-indicator');
       
-      userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
-    }
+      userRoleEl.textContent = name;
+      statusTextEl.textContent = `${city} • Client`;
+      statusIndicator.className = 'status-indicator active';
+      statusIndicator.style.backgroundColor = 'var(--accent-indigo)';
 
-    if (clientAvatarBase64) {
-      avatarCircle.innerHTML = `<img src="${clientAvatarBase64}" style="width:100%; height:100%; object-fit:cover;">`;
-    } else {
-      const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-      avatarCircle.textContent = initials || 'CL';
-    }
+      // Update avatar circle in header status card
+      const userStatusCard = document.getElementById('user-status');
+      let avatarCircle = userStatusCard.querySelector('.avatar-header-circle');
+      if (!avatarCircle) {
+        avatarCircle = document.createElement('div');
+        avatarCircle.className = 'avatar-header-circle';
+        avatarCircle.style.width = '32px';
+        avatarCircle.style.height = '32px';
+        avatarCircle.style.borderRadius = '50%';
+        avatarCircle.style.marginRight = '8px';
+        avatarCircle.style.overflow = 'hidden';
+        avatarCircle.style.background = 'linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan))';
+        avatarCircle.style.display = 'flex';
+        avatarCircle.style.alignItems = 'center';
+        avatarCircle.style.justify = 'center';
+        avatarCircle.style.color = 'white';
+        avatarCircle.style.fontSize = '10px';
+        avatarCircle.style.fontWeight = 'bold';
+        
+        userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
+      }
 
-    // Dynamic case analyzer autofill city/interest
-    filterSpecialty.value = interestVal;
-    
-    // Hide onboarding overlay
-    onboardingOverlay.style.display = 'none';
+      if (clientAvatarBase64) {
+        avatarCircle.innerHTML = `<img src="${clientAvatarBase64}" style="width:100%; height:100%; object-fit:cover;">`;
+      } else {
+        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        avatarCircle.textContent = initials || 'CL';
+      }
+
+      // Dynamic case analyzer autofill city/interest
+      filterSpecialty.value = interestVal;
+      
+      // Hide onboarding overlay
+      onboardingOverlay.style.display = 'none';
+    })
+    .catch(err => {
+      alert('Error registering client: ' + err.message);
+      console.error(err);
+    });
   });
 
   // Step 3B: Submit Lawyer Profile
@@ -289,248 +308,118 @@ document.addEventListener('DOMContentLoaded', () => {
     const fees = document.getElementById('lawyer-fees').value.trim();
     const contactInfo = document.getElementById('lawyer-contact-info').value.trim();
 
-    // Auto-calculate win rate
-    const winRateVal = fought > 0 ? Math.round((won / fought) * 100) : 0;
-    const barNumber = `BAR #${Math.floor(100000 + Math.random() * 900000)}`;
-
-    const newLawyer = {
-      id: name.toLowerCase().replace(/[^a-z]/g, '-'),
-      name: name,
-      gender: gender,
-      specialty: specialty,
-      specialtyLabel: document.querySelector(`#lawyer-specialty-type option[value="${specialty}"]`).textContent,
-      avatarText: name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
-      avatarBase64: lawyerAvatarBase64,
-      rating: '5.0',
-      casesHandled: fought,
-      winRate: `${winRateVal}%`,
-      bio: `Verified Advocate practicing in ${position} of ${city}. Dedicated representing clients in ${specialty} matters with upfront flat-fee options.`,
-      barNumber: barNumber,
-      packages: [
-        { name: 'Initial Brief Consultation', price: '$100', desc: 'Up to 45 min consultation online or offline.' },
-        { name: 'Standard Case Representation', price: fees, desc: 'General counsel and document preparation.' }
-      ],
-      verified_cases: [
-        { case_type: `Verdict in ${position} Matter`, year: 2024, court_level: position, role: "Petitioner's Counsel" },
-        { case_type: `Dispute Resolution under State Codes`, year: 2023, court_level: position, role: "Respondent's Counsel" },
-        { case_type: `Compliance Review & Arbitration`, year: 2022, court_level: "Tribunal", role: "Petitioner's Counsel" }
-      ]
+    const requestBody = {
+      name,
+      gender,
+      city,
+      position,
+      specialty,
+      exp,
+      fought,
+      ongoing,
+      won,
+      fees,
+      contactInfo,
+      avatarBase64: lawyerAvatarBase64
     };
 
-    // Prepend to lawyers array
-    LAWYERS_DATABASE.unshift(newLawyer);
+    fetch('/api/lawyers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    })
+    .then(res => {
+      if (!res.ok) {
+        return res.json().then(errData => {
+          throw new Error(errData.details ? errData.details.join('\n') : errData.error || 'Failed to register');
+        });
+      }
+      return res.json();
+    })
+    .then(data => {
+      const newLawyer = data.lawyer;
 
-    state.userType = 'lawyer';
-    state.userProfile = newLawyer;
+      // Prepend to lawyers array
+      LAWYERS_DATABASE.unshift(newLawyer);
 
-    // Update Status UI in header
-    const userRoleEl = document.querySelector('.user-role');
-    const statusTextEl = document.querySelector('.status-text');
-    const statusIndicator = document.querySelector('.status-indicator');
-    
-    userRoleEl.textContent = name;
-    statusTextEl.textContent = `${city} • Advocate`;
-    statusIndicator.className = 'status-indicator active';
-    statusIndicator.style.backgroundColor = 'var(--accent-cyan)';
+      state.userType = 'lawyer';
+      state.userProfile = newLawyer;
 
-    // Update avatar circle in header status card
-    const userStatusCard = document.getElementById('user-status');
-    let avatarCircle = userStatusCard.querySelector('.avatar-header-circle');
-    if (!avatarCircle) {
-      avatarCircle = document.createElement('div');
-      avatarCircle.className = 'avatar-header-circle';
-      avatarCircle.style.width = '32px';
-      avatarCircle.style.height = '32px';
-      avatarCircle.style.borderRadius = '50%';
-      avatarCircle.style.marginRight = '8px';
-      avatarCircle.style.overflow = 'hidden';
-      avatarCircle.style.background = 'linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo))';
-      avatarCircle.style.display = 'flex';
-      avatarCircle.style.alignItems = 'center';
-      avatarCircle.style.justify = 'center';
-      avatarCircle.style.color = 'white';
-      avatarCircle.style.fontSize = '10px';
-      avatarCircle.style.fontWeight = 'bold';
+      // Update Status UI in header
+      const userRoleEl = document.querySelector('.user-role');
+      const statusTextEl = document.querySelector('.status-text');
+      const statusIndicator = document.querySelector('.status-indicator');
       
-      userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
-    }
+      userRoleEl.textContent = name;
+      statusTextEl.textContent = `${city} • Advocate`;
+      statusIndicator.className = 'status-indicator active';
+      statusIndicator.style.backgroundColor = 'var(--accent-cyan)';
 
-    if (lawyerAvatarBase64) {
-      avatarCircle.innerHTML = `<img src="${lawyerAvatarBase64}" style="width:100%; height:100%; object-fit:cover;">`;
-    } else {
-      avatarCircle.textContent = newLawyer.avatarText;
-    }
+      // Update avatar circle in header status card
+      const userStatusCard = document.getElementById('user-status');
+      let avatarCircle = userStatusCard.querySelector('.avatar-header-circle');
+      if (!avatarCircle) {
+        avatarCircle = document.createElement('div');
+        avatarCircle.className = 'avatar-header-circle';
+        avatarCircle.style.width = '32px';
+        avatarCircle.style.height = '32px';
+        avatarCircle.style.borderRadius = '50%';
+        avatarCircle.style.marginRight = '8px';
+        avatarCircle.style.overflow = 'hidden';
+        avatarCircle.style.background = 'linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo))';
+        avatarCircle.style.display = 'flex';
+        avatarCircle.style.alignItems = 'center';
+        avatarCircle.style.justify = 'center';
+        avatarCircle.style.color = 'white';
+        avatarCircle.style.fontSize = '10px';
+        avatarCircle.style.fontWeight = 'bold';
+        
+        userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
+      }
 
-    // Refresh lawyers list in tab 2
-    renderLawyers();
+      if (lawyerAvatarBase64) {
+        avatarCircle.innerHTML = `<img src="${lawyerAvatarBase64}" style="width:100%; height:100%; object-fit:cover;">`;
+      } else {
+        avatarCircle.textContent = newLawyer.avatarText;
+      }
 
-    // Close overlay
-    onboardingOverlay.style.display = 'none';
+      // Close overlay
+      onboardingOverlay.style.display = 'none';
 
-    // Route to directory to show their card
-    switchTab('matchmaker');
+      // Reload lawyers database and then route to directory to show the card
+      loadLawyers().then(() => {
+        renderLawyers();
+        switchTab('matchmaker');
+      });
+    })
+    .catch(err => {
+      alert('Registration error:\n' + err.message);
+      console.error(err);
+    });
   });
 
-  // ==================== MOCK DATABASES ====================
-  const LAWYERS_DATABASE = [
-    {
-      id: 'sarah-jenkins',
-      name: 'Sarah Jenkins, Esq.',
-      specialty: 'tenancy',
-      specialtyLabel: 'Tenancy & Housing Law',
-      avatarText: 'SJ',
-      rating: '4.9',
-      casesHandled: 42,
-      winRate: '93%',
-      bio: 'Former Housing Authority Counsel. Dedicated to representing tenants against predatory landlords, security deposit withholding, and illegal lockouts.',
-      barNumber: 'CA #582910',
-      packages: [
-        { name: 'Demand Letter & Review', price: '$150', desc: 'Drafting formal notice to landlord and reviewing response.' },
-        { name: 'Small Claims Prep', price: '$450', desc: 'Full evidence compilation, witness sheets, and courtroom rehearsal.' },
-        { name: 'Full Litigation Retainer', price: '$1,800', desc: 'Comprehensive court representation and mediation filings.' }
-      ],
-      verified_cases: [
-        { case_type: "Security Deposit Recovery Claim", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
-        { case_type: "Illegal Eviction Notice Defense", year: 2023, court_level: "District Court", role: "Respondent's Counsel" },
-        { case_type: "Rent Control Compliance Audit", year: 2023, court_level: "Tribunal", role: "Respondent's Counsel" },
-        { case_type: "Habitability Failure & Repair Suit", year: 2022, court_level: "District Court", role: "Petitioner's Counsel" }
-      ]
-    },
-    {
-      id: 'marcus-vance',
-      name: 'Marcus Vance',
-      specialty: 'employment',
-      specialtyLabel: 'Employment & Labor Law',
-      avatarText: 'MV',
-      rating: '4.8',
-      casesHandled: 67,
-      winRate: '91%',
-      bio: 'Fierce advocate for freelance designers, contractors, and employees facing unpaid wages, wage theft, misclassification, and overtime violations.',
-      barNumber: 'NY #392815',
-      packages: [
-        { name: 'Freelancer Invoice Recovery', price: '$250', desc: 'Official breach of contract letter and settlement negotiations.' },
-        { name: 'Labor Board Filing Support', price: '$600', desc: 'Drafting state labor agency claims and evidence audit.' },
-        { name: 'Employment Suit Representation', price: 'Contingency', desc: 'No upfront fee. 30% of recovered settlement.' }
-      ],
-      verified_cases: [
-        { case_type: "Freelance Unpaid Invoice Suit", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
-        { case_type: "Employee Wage & Overtime Misclassification", year: 2023, court_level: "Tribunal", role: "Petitioner's Counsel" },
-        { case_type: "Covenant Not to Compete Invalidation", year: 2023, court_level: "High Court", role: "Petitioner's Counsel" },
-        { case_type: "Severance Package Discrepancy Dispute", year: 2022, court_level: "District Court", role: "Respondent's Counsel" }
-      ]
-    },
-    {
-      id: 'elena-rostova',
-      name: 'Elena Rostova',
-      specialty: 'contract',
-      specialtyLabel: 'Contracts & Freelance',
-      avatarText: 'ER',
-      rating: '4.9',
-      casesHandled: 84,
-      winRate: '95%',
-      bio: 'Specializes in tech freelance agreements, IP transfers, non-compete clauses, and drafting robust service agreements to prevent litigation.',
-      barNumber: 'TX #482910',
-      packages: [
-        { name: 'Contract Revision Audit', price: '$200', desc: 'Line-by-line contract review and markup with redlines.' },
-        { name: 'Template Suite Bundle', price: '$400', desc: '3 customized client contract templates for your business.' },
-        { name: 'Custom Agreement Drafting', price: '$750', desc: 'Full custom contract drafting tailored to your specific project.' }
-      ],
-      verified_cases: [
-        { case_type: "SaaS IP Assignment Breach", year: 2024, court_level: "High Court", role: "Respondent's Counsel" },
-        { case_type: "NDA Violation Enforcement Claim", year: 2023, court_level: "District Court", role: "Petitioner's Counsel" },
-        { case_type: "Contractor Service Default Arbitration", year: 2023, court_level: "Tribunal", role: "Respondent's Counsel" }
-      ]
-    },
-    {
-      id: 'david-kim',
-      name: 'David Kim',
-      specialty: 'consumer',
-      specialtyLabel: 'Consumer Protection',
-      avatarText: 'DK',
-      rating: '4.7',
-      casesHandled: 53,
-      winRate: '88%',
-      bio: 'Helping buyers challenge dishonest dealerships, defective appliances (lemon laws), hidden billing subscriptions, and credit reporting errors.',
-      barNumber: 'IL #928374',
-      packages: [
-        { name: 'Dealer Demand Notice', price: '$220', desc: 'Official letter detailing Lemon Law codes and replacement demand.' },
-        { name: 'Arbitration Filing Pack', price: '$500', desc: 'Drafting files and evidence binders for consumer arbitration boards.' },
-        { name: 'Court Action Retainer', price: '$1,200', desc: 'Filing state civil action against manufacturer or dealer.' }
-      ],
-      verified_cases: [
-        { case_type: "Used Car Dealership Odometer Fraud", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
-        { case_type: "Unfair Subscription Billing Class Action", year: 2023, court_level: "High Court", role: "Petitioner's Counsel" },
-        { case_type: "Appliances Lemon Law Compensation Claim", year: 2023, court_level: "Tribunal", role: "Petitioner's Counsel" },
-        { case_type: "Credit Bureau Reporting Error Settlement", year: 2022, court_level: "District Court", role: "Petitioner's Counsel" }
-      ]
-    },
-    {
-      id: 'samira-patel',
-      name: 'Samira Patel',
-      specialty: 'tenancy',
-      specialtyLabel: 'Tenancy & Housing Law',
-      avatarText: 'SP',
-      rating: '4.9',
-      casesHandled: 31,
-      winRate: '94%',
-      bio: 'Passionate about housing access. Specializes in habitability issues (mold, water leaks), retaliatory rent hikes, and local rent control disputes.',
-      barNumber: 'CA #619384',
-      packages: [
-        { name: 'Notice of Violation Draft', price: '$180', desc: 'Official notice demanding repairs with code inspector cites.' },
-        { name: 'Mediation Representation', price: '$500', desc: 'Preparation and advocacy at voluntary mediation boards.' },
-        { name: 'Rent Escrow Filing Support', price: '$800', desc: 'Filing to deposit rent with court until repairs are finished.' }
-      ],
-      verified_cases: [
-        { case_type: "Illegal Lockout & Security Deposit Refund", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
-        { case_type: "Retaliatory Rent Increase Appeal", year: 2023, court_level: "Tribunal", role: "Petitioner's Counsel" },
-        { case_type: "Water Intrusion & Black Mold Liability", year: 2022, court_level: "District Court", role: "Petitioner's Counsel" }
-      ]
-    },
-    {
-      id: 'robert-vance',
-      name: 'Robert Vance, Esq.',
-      specialty: 'criminal',
-      specialtyLabel: 'Criminal Defense',
-      avatarText: 'RV',
-      rating: '4.8',
-      casesHandled: 92,
-      winRate: '90%',
-      bio: 'Providing aggressive representation for criminal defense. Specialized in theft, traffic violations, misdemeanors, and civil rights disputes.',
-      barNumber: 'CA #928310',
-      packages: [
-        { name: 'Arrest & Bail consultation', price: '$300', desc: 'Urgent consultation on legal rights and bail structure.' },
-        { name: 'Trial Defense Retainer', price: '$2,500', desc: 'Court appearance defense and discovery audit.' }
-      ],
-      verified_cases: [
-        { case_type: "Misdemeanor Theft Charge Dismissal", year: 2024, court_level: "District Court", role: "Respondent's Counsel" },
-        { case_type: "First-Offense DUI Citation Appeal", year: 2023, court_level: "District Court", role: "Respondent's Counsel" },
-        { case_type: "Search Warrant Evidence Suppression Hearing", year: 2023, court_level: "High Court", role: "Respondent's Counsel" },
-        { case_type: "Civil Rights Arrest Warrant Invalidation", year: 2022, court_level: "High Court", role: "Respondent's Counsel" }
-      ]
-    },
-    {
-      id: 'priya-sharma',
-      name: 'Priya Sharma',
-      specialty: 'family',
-      specialtyLabel: 'Family Law & Divorce',
-      avatarText: 'PS',
-      rating: '4.9',
-      casesHandled: 58,
-      winRate: '94%',
-      bio: 'Compassionate family law attorney. Focused on mutual consent divorce, child custody rights, alimony audits, and marital property settlements.',
-      barNumber: 'NY #618290',
-      packages: [
-        { name: 'Divorce Mediation Consultation', price: '$250', desc: 'Review of mediation steps, asset splits, and child custody rules.' },
-        { name: 'Mutual Consent Filing Pack', price: '$800', desc: 'Drafting all mutual separation agreements and court filing support.' }
-      ],
-      verified_cases: [
-        { case_type: "Mutual Separation Agreement Petition", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
-        { case_type: "Joint Custody & Visitation Dispute", year: 2023, court_level: "District Court", role: "Petitioner's Counsel" },
-        { case_type: "Alimony Support Revision Appeal", year: 2023, court_level: "High Court", role: "Respondent's Counsel" },
-        { case_type: "Marital Asset Partition Dispute", year: 2022, court_level: "Tribunal", role: "Petitioner's Counsel" }
-      ]
+  // ==================== BACKEND DATABASE INTEGRATION ====================
+  let LAWYERS_DATABASE = [];
+
+  async function loadLawyers() {
+    try {
+      const response = await fetch('/api/lawyers');
+      if (response.ok) {
+        LAWYERS_DATABASE = await response.json();
+      } else {
+        console.error("API returned error status fetching lawyers:", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to load lawyers from backend:", error);
     }
-  ];
+  }
+
+  // Load lawyers immediately on startup
+  loadLawyers().then(() => {
+    renderLawyers();
+  });
 
   const MOCK_CONTRACT_AUDITS = {
     lease: {
@@ -730,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Special scroll triggers or logic when entering tabs
     if (tabId === 'matchmaker') {
-      renderLawyers();
+      loadLawyers().then(() => renderLawyers());
     }
   }
 
