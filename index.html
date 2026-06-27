@@ -62,6 +62,80 @@
           </div>
           <button type="submit" class="btn btn-primary w-full btn-large">Get Verification Code</button>
         </form>
+        <div style="margin-top: 16px; text-align: center; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 12px;">
+          <a href="#" id="link-go-to-advocate-signup" style="font-size: 12px; color: var(--color-thread-light); text-decoration: none; font-weight: 500; font-family: var(--font-mono); display: inline-flex; align-items: center; gap: 4px;">
+            <i data-lucide="shield" style="width: 14px; height: 14px;"></i> Are you a lawyer? List your practice →
+          </a>
+        </div>
+      </div>
+
+      <!-- STEP 1B: ADVOCATE OFFICIAL SIGNUP -->
+      <div class="onboarding-step" id="onboarding-step-advocate-signup" style="display: none;">
+        <div class="onboarding-header">
+          <button type="button" class="back-step-btn" id="btn-back-signup-to-step1"><i data-lucide="arrow-left"></i></button>
+          <h2>Official Advocate Sign-Up</h2>
+          <p>Register your profile. Enrolments are verified for format consistency and credential alignment.</p>
+        </div>
+
+        <form id="advocate-signup-form" class="onboarding-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="signup-lawyer-name">Full Name</label>
+              <input type="text" id="signup-lawyer-name" placeholder="Advocate Jane Smith, Esq." required>
+            </div>
+            <div class="form-group">
+              <label for="signup-lawyer-city">City</label>
+              <input type="text" id="signup-lawyer-city" placeholder="E.g., Mumbai" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="signup-lawyer-state">State Bar Council</label>
+              <select id="signup-lawyer-state" required>
+                <option value="" disabled selected>Select State</option>
+                <option value="MAH">Maharashtra (MAH)</option>
+                <option value="D">Delhi (D)</option>
+                <option value="UP">Uttar Pradesh (UP)</option>
+                <option value="WB">West Bengal (WB)</option>
+                <option value="KA">Karnataka (KA)</option>
+                <option value="TN">Tamil Nadu (TN)</option>
+                <option value="GJ">Gujarat (GJ)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="signup-lawyer-enrolment">Bar Enrolment Number</label>
+              <input type="text" id="signup-lawyer-enrolment" placeholder="E.g., MAH/1234/2015" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="signup-lawyer-specialty">Practice Specialty</label>
+              <select id="signup-lawyer-specialty" required>
+                <option value="tenancy">Tenancy & Housing Law</option>
+                <option value="employment">Employment & Labor Law</option>
+                <option value="contract">Contracts & Freelance</option>
+                <option value="consumer">Consumer Protection</option>
+                <option value="family">Family Law & Divorce</option>
+                <option value="criminal">Criminal Defense</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="signup-lawyer-exp">Years of Experience</label>
+              <input type="number" id="signup-lawyer-exp" min="0" max="60" placeholder="E.g. 10" required>
+            </div>
+          </div>
+
+          <!-- AI Consistency Verification Verdict Stamp Area -->
+          <div class="verdict-stamp-container" id="signup-ai-verdict-container" style="display: none; margin-top: 10px;"></div>
+
+          <div class="disclaimer-text" style="font-size: 10px; color: var(--text-muted); margin-top: 12px; margin-bottom: 12px; line-height: 1.3;">
+            We check the format only. Full verification happens through your State Bar Council or DigiLocker before your profile goes live — usually within 2-3 business days.
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full btn-large">Verify & Sign Up</button>
+        </form>
       </div>
 
       <!-- STEP 2: OTP VERIFICATION -->
@@ -203,25 +277,21 @@
             </div>
           </div>
 
-          <div class="form-row-triple">
+          <div class="form-row">
             <div class="form-group">
-              <label for="lawyer-fought">Cases Fought</label>
+              <label for="lawyer-fought">Total Cases</label>
               <input type="number" id="lawyer-fought" min="0" placeholder="E.g. 50" required>
             </div>
             <div class="form-group">
               <label for="lawyer-ongoing">Ongoing Cases</label>
               <input type="number" id="lawyer-ongoing" min="0" placeholder="E.g. 5" required>
             </div>
-            <div class="form-group">
-              <label for="lawyer-won">Cases Won</label>
-              <input type="number" id="lawyer-won" min="0" placeholder="E.g. 40" required>
-            </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="lawyer-fees">Average Fees (e.g. $200/hr, $500 Flat)</label>
-              <input type="text" id="lawyer-fees" placeholder="E.g. $300 Flat" required>
+              <label for="lawyer-fees">Average Fees (e.g. ₹2,000/hr, ₹5,000 Flat)</label>
+              <input type="text" id="lawyer-fees" placeholder="E.g. ₹5,000 Flat" required>
             </div>
             <div class="form-group">
               <label for="lawyer-contact-info">Direct Contact (Email/Phone)</label>
@@ -276,6 +346,7 @@
         <div class="status-info">
           <span class="user-role">Anonymous Client</span>
           <span class="status-text">Encrypted Connection</span>
+          <a href="#" id="link-switch-role" style="font-size: 8px; color: var(--color-thread-light); text-decoration: none; font-family: var(--font-mono); margin-top: 2px; display: none;">Log Out / Switch Role</a>
         </div>
       </div>
     </header>
@@ -298,7 +369,7 @@
             <p class="subtitle">Avoid legal jargon. Just tell us the story, date, and key events.</p>
             
             <div class="textarea-wrapper">
-              <textarea id="case-description-input" placeholder="E.g., My landlord is refusing to return my security deposit of $1,500. The lease ended on June 1st. He says it's for cleaning a scratch on the kitchen cabinet, but the scratch was there when I moved in. He is not answering my calls..."></textarea>
+              <textarea id="case-description-input" placeholder="E.g., My landlord is refusing to return my security deposit of ₹15,000. The lease ended on June 1st. He says it's for cleaning a scratch on the kitchen cabinet, but the scratch was there when I moved in. He is not answering my calls..."></textarea>
               <div class="character-count"><span id="char-count">0</span> characters</div>
             </div>
 
@@ -306,10 +377,10 @@
             <div class="example-prompts">
               <span class="label">Or try a common scenario:</span>
               <div class="prompt-chips">
-                <button class="prompt-chip" data-text="I've been working as a contract designer for a local firm. I completed 3 projects over the last month and submitted invoices totaling $3,200. The client is dodging my emails and hasn't paid me, and our contract says payment is due within 15 days of project delivery.">
+                <button class="prompt-chip" data-text="I've been working as a contract designer for a local firm. I completed 3 projects over the last month and submitted invoices totaling ₹50,000. The client is dodging my emails and hasn't paid me, and our contract says payment is due within 15 days of project delivery.">
                   Unpaid Freelancer Invoice
                 </button>
-                <button class="prompt-chip" data-text="My landlord claims I damaged the hardwood floor and is withholding my $2,000 security deposit. However, I have photos from my move-in inspection showing the scratches were already present before I took keys. The lease says normal wear and tear is covered.">
+                <button class="prompt-chip" data-text="My landlord claims I damaged the hardwood floor and is withholding my ₹25,000 security deposit. However, I have photos from my move-in inspection showing the scratches were already present before I took keys. The lease says normal wear and tear is covered.">
                   Withheld Security Deposit
                 </button>
                 <button class="prompt-chip" data-text="I bought a certified pre-owned car from a dealer last week. Three days later, the transmission completely failed. The dealership is telling me the warranty doesn't cover this specific issue, but they promised a 30-day full coverage verbal guarantee during the sale.">
@@ -391,7 +462,7 @@
               <div class="metrics-grid">
                 <div class="metric-card">
                   <span class="label">Estimated Claim Value</span>
-                  <span class="value text-emerald" id="result-claim-value">$1,500</span>
+                  <span class="value text-emerald" id="result-claim-value">₹15,000</span>
                   <span class="subtext">Based on statutory limits</span>
                 </div>
                 <div class="metric-card">
@@ -401,7 +472,7 @@
                 </div>
                 <div class="metric-card">
                   <span class="label">Filing / Small Claims Costs</span>
-                  <span class="value" id="result-filing-costs">$50 - $120</span>
+                  <span class="value" id="result-filing-costs">₹450 - ₹900</span>
                   <span class="subtext">Recoverable if you win</span>
                 </div>
               </div>
@@ -409,7 +480,7 @@
               <!-- AI Analysis Text -->
               <div class="analysis-narrative-section">
                 <h4>Legal Assessment Summary</h4>
-                <p id="result-narrative">Based on your input, you have a solid tenancy dispute claim under local housing laws. Retaining a security deposit for normal wear and tear or undocumented damage is generally invalid. Since the dispute is below $5,000, Small Claims Court is your fastest path if the landlord refuses to negotiate.</p>
+                <p id="result-narrative">Based on your input, you have a solid tenancy dispute claim under local housing laws. Retaining a security deposit for normal wear and tear or undocumented damage is generally invalid. Since the dispute is below ₹50,000, Small Claims Court is your fastest path if the landlord refuses to negotiate.</p>
               </div>
 
               <!-- Recommended Next Steps Checklist -->
@@ -496,11 +567,11 @@
           </div>
 
           <div class="filter-group">
-            <label for="filter-experience"><i data-lucide="briefcase"></i> Advocate Win-Rate</label>
+            <label for="filter-experience"><i data-lucide="briefcase"></i> Experience Level</label>
             <select id="filter-experience">
-              <option value="all">Any Performance</option>
-              <option value="high">Over 90% Category Success</option>
-              <option value="medium">Over 80% Category Success</option>
+              <option value="all">Any Experience</option>
+              <option value="high">Senior (50+ Cases)</option>
+              <option value="medium">Intermediate (20+ Cases)</option>
             </select>
           </div>
 
@@ -563,7 +634,7 @@
                 <span>Active Package</span>
                 <span class="pill-tag text-emerald" id="ws-pricing-tag">Fixed Flat Fee</span>
               </div>
-              <div class="price-amount" id="ws-pricing-price">$450</div>
+              <div class="price-amount" id="ws-pricing-price">₹4,500</div>
               <div class="pricing-details">
                 <span id="ws-pricing-desc">Covers formal demand letter, response reviews, and up to 2 calls.</span>
                 <a href="#" class="escrow-link"><i data-lucide="help-circle"></i> Funds held securely in Escrow</a>
@@ -661,110 +732,413 @@
 
         </div>
 
+        <!-- LAWYER CASELOAD CONTAINER (Only visible to Lawyers) -->
+        <div class="workspace-grid" id="lawyer-caseload-container" style="display: none; grid-template-columns: 320px 1fr; gap: 20px;">
+          
+          <!-- Client List Sidebar -->
+          <div class="workspace-sidebar glass-card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="logo-icon-wrapper mini" style="background:rgba(255,255,255,0.05); color:var(--accent-indigo); width:28px; height:28px;"><i data-lucide="users" style="width:16px; height:16px;"></i></div>
+              <h3 style="margin:0; font-size:16px;">Active Caseload</h3>
+            </div>
+            <p class="subtitle" style="font-size:11px; color:var(--text-muted); margin:0 0 10px 0;">Manage active client inquiries, consultations, and document reviews.</p>
+            
+            <div id="lawyer-client-list" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 500px;">
+              <!-- Client items dynamically rendered here -->
+            </div>
+          </div>
+
+          <!-- Active Client Detail Area (re-uses chat & uploader design layout) -->
+          <div class="workspace-main-panel" id="lawyer-active-client-detail" style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="glass-card" style="padding: 60px 40px; text-align: center; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height: 400px;">
+              <i data-lucide="folder-open" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 12px;"></i>
+              <h4 style="margin:0 0 8px 0;">No Client Case Selected</h4>
+              <p style="color: var(--text-secondary); font-size:12px; max-width: 400px; margin: 0 auto;">Select a client from the active caseload sidebar to review documents, message them, and update their filing roadmap.</p>
+            </div>
+          </div>
+          
+        </div>
+
       </section>
 
       <!-- ==================== TAB 4: RIGHTS ACADEMY ==================== -->
       <section class="content-section" id="section-academy">
-        <div class="hero-header">
-          <span class="pill-tag">Demystifying Legal Concepts</span>
-          <h1>Plain English Legal Library</h1>
-          <p>Understand standard situations, procedures, and statutory rights without getting lost in legal dictionaries.</p>
+        <!-- CLIENT ACADEMY VIEW -->
+        <div id="client-academy-view" style="width: 100%;">
+          <div class="hero-header">
+            <span class="pill-tag">Demystifying Legal Concepts</span>
+            <h1>Plain English Legal Library</h1>
+            <p>Understand standard situations, procedures, and statutory rights without getting lost in legal dictionaries.</p>
+          </div>
+
+          <div class="academy-grid">
+            <!-- Card 1 -->
+            <div class="glass-card academy-card">
+              <div class="card-icon-wrapper bg-soft-blue">
+                <i data-lucide="home" class="text-blue"></i>
+              </div>
+              <h3>Tenancy & Housing</h3>
+              <p>Rent rules, deposits, lockouts, and tenant protections.</p>
+              <div class="academy-links">
+                <a href="#" class="academy-link" data-scenario="deposit">Security Deposit Recovery Guides <i data-lucide="arrow-right"></i></a>
+                <a href="#" class="academy-link" data-scenario="repairs">Landlord Refusing Repairs? Here's the Law <i data-lucide="arrow-right"></i></a>
+                <a href="#" class="academy-link" data-scenario="eviction">Illegal Lockouts & Eviction Notices <i data-lucide="arrow-right"></i></a>
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="glass-card academy-card">
+              <div class="card-icon-wrapper bg-soft-indigo">
+                <i data-lucide="briefcase" class="text-indigo"></i>
+              </div>
+              <h3>Freelance & Labor</h3>
+              <p>Contracts, wages, misclassifications, and non-payment recovery.</p>
+              <div class="academy-links">
+                <a href="#" class="academy-link" data-scenario="wage">Recovering Unpaid Freelance Invoices <i data-lucide="arrow-right"></i></a>
+                <a href="#" class="academy-link" data-scenario="contract">Employee vs Contractor Classifications <i data-lucide="arrow-right"></i></a>
+                <a href="#" class="academy-link" data-scenario="overtime">Overtime Claims & Missing Paystubs <i data-lucide="arrow-right"></i></a>
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="glass-card academy-card">
+              <div class="card-icon-wrapper bg-soft-cyan">
+                <i data-lucide="shopping-bag" class="text-cyan"></i>
+              </div>
+              <h3>Consumer Protection</h3>
+              <p>Lemon laws, warranties, billing traps, and chargebacks.</p>
+              <div class="academy-links">
+                <a href="#" class="academy-link" data-scenario="lemon">Used Car & Lemon Law Explainer <i data-lucide="arrow-right"></i></a>
+                <a href="#" class="academy-link" data-scenario="subscription">Subscription Trap Cancellations <i data-lucide="arrow-right"></i></a>
+                <a href="#" class="academy-link" data-scenario="chargeback">Credit Card Dispute & Chargeback Flow <i data-lucide="arrow-right"></i></a>
+              </div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="glass-card academy-card">
+              <div class="card-icon-wrapper bg-soft-teal">
+                <i data-lucide="scale" class="text-teal"></i>
+              </div>
+              <h3>Court & Resolution</h3>
+              <p>Small claims process, mediation rules, and attorney billing guides.</p>
+              <div class="academy-links">
+                <a href="#" class="academy-link" data-scenario="smallclaims">Small Claims Court Filing Checklist <i data-lucide="arrow-right"></i></a>
+                <a href="#" class="academy-link" data-scenario="mediation">What Happens in Mediation? <i data-lucide="arrow-right"></i></a>
+                <a href="#" class="academy-link" data-scenario="lawyer-fees">How Legal Fees Work (Hourly vs Contingency) <i data-lucide="arrow-right"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plain English FAQ Accordion -->
+          <div class="glass-card academy-faq-section" style="margin-top: 24px;">
+            <h3>Frequently Asked Questions for Beginners</h3>
+            <div class="faq-accordion">
+              <div class="faq-item">
+                <div class="faq-question">
+                  <span>Can I represent myself in court if I can't afford a lawyer?</span>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>Yes. This is called representing yourself <i>"pro se"</i>. In Small Claims Court, representing yourself is actually the standard (and in some jurisdictions, lawyers are not even allowed!). Aequitas helps you build and organize the documents required to represent yourself successfully.</p>
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <div class="faq-question">
+                  <span>What is a "Retainer Fee" vs a "Contingency"?</span>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>A <strong>Retainer Fee</strong> is an upfront down payment made to a lawyer before they start working, which is drawn against as they bill hourly. A <strong>Contingency Fee</strong> means the lawyer receives no payment upfront and takes a percentage (usually 30-40%) of the money recovered. If you lose, they get nothing.</p>
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <div class="faq-question">
+                  <span>How do I know if my lawyer is doing a good job?</span>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>Trustworthy lawyers establish clear milestones, explain strategy in plain English, and provide transparent billing summaries. The Aequitas Case Workspace allows you to see exactly what phase your lawsuit is in, preventing "black box" syndrome.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="academy-grid">
-          <!-- Card 1 -->
-          <div class="glass-card academy-card">
-            <div class="card-icon-wrapper bg-soft-blue">
-              <i data-lucide="home"></i>
-            </div>
-            <h3>Tenant & Rental Housing</h3>
-            <p>What rights do you have regarding security deposits, repair timelines, eviction threats, and landlord access?</p>
-            <div class="academy-links">
-              <a href="#" class="academy-link" data-scenario="deposit">Security Deposit Recovery Guides <i data-lucide="arrow-right"></i></a>
-              <a href="#" class="academy-link" data-scenario="repairs">Landlord Refusing Repairs? Here's the Law <i data-lucide="arrow-right"></i></a>
-              <a href="#" class="academy-link" data-scenario="eviction">Illegal Lockouts & Eviction Notices <i data-lucide="arrow-right"></i></a>
-            </div>
+        <!-- LAWYER TOOLKIT VIEW -->
+        <div id="lawyer-toolkit-view" style="display: none; width: 100%;">
+          <div class="hero-header">
+            <span class="pill-tag">Advocate Management Desk</span>
+            <h1>Lawyer Desk & Toolkit</h1>
+            <p>Draft Vakalatnamas, track court hearings, issue Escrow bills, and search Indian legal precedents.</p>
           </div>
 
-          <!-- Card 2 -->
-          <div class="glass-card academy-card">
-            <div class="card-icon-wrapper bg-soft-emerald">
-              <i data-lucide="briefcase"></i>
+          <div class="toolkit-dashboard-layout" style="display: grid; grid-template-columns: 220px 1fr; gap: 24px; margin-top: 24px; align-items: start;">
+            <!-- Left Sidebar Navigation inside Toolkit -->
+            <div class="glass-card toolkit-sidebar" style="padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <button type="button" class="toolkit-nav-btn active" data-tool="vakalatnama" style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--color-thread); color: var(--text-primary); cursor: pointer; font-family: var(--font-mono); font-size: 11px;">
+                <i data-lucide="scroll" style="width: 14px; height: 14px; color: var(--accent-cyan);"></i> Vakalatnama Builder
+              </button>
+              <button type="button" class="toolkit-nav-btn" data-tool="calendar" style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 14px; background: transparent; border: 1px solid transparent; color: var(--text-secondary); cursor: pointer; font-family: var(--font-mono); font-size: 11px;">
+                <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--accent-indigo);"></i> Court Calendar
+              </button>
+              <button type="button" class="toolkit-nav-btn" data-tool="billing" style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 14px; background: transparent; border: 1px solid transparent; color: var(--text-secondary); cursor: pointer; font-family: var(--font-mono); font-size: 11px;">
+                <i data-lucide="credit-card" style="width: 14px; height: 14px; color: var(--accent-emerald);"></i> Escrow Billing
+              </button>
+              <button type="button" class="toolkit-nav-btn" data-tool="drafts" style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 14px; background: transparent; border: 1px solid transparent; color: var(--text-secondary); cursor: pointer; font-family: var(--font-mono); font-size: 11px;">
+                <i data-lucide="book-open" style="width: 14px; height: 14px; color: var(--accent-rose);"></i> Precedents & Drafts
+              </button>
             </div>
-            <h3>Workplace & Employment</h3>
-            <p>Know your protections for unpaid wages, freelance contract breaches, overtime disputes, and wrongful termination.</p>
-            <div class="academy-links">
-              <a href="#" class="academy-link" data-scenario="wage">Recovering Unpaid Freelance Invoices <i data-lucide="arrow-right"></i></a>
-              <a href="#" class="academy-link" data-scenario="contract">Employee vs Contractor Classifications <i data-lucide="arrow-right"></i></a>
-              <a href="#" class="academy-link" data-scenario="overtime">Overtime Claims & Missing Paystubs <i data-lucide="arrow-right"></i></a>
-            </div>
-          </div>
 
-          <!-- Card 3 -->
-          <div class="glass-card academy-card">
-            <div class="card-icon-wrapper bg-soft-purple">
-              <i data-lucide="shopping-bag"></i>
-            </div>
-            <h3>Consumer Rights & Scams</h3>
-            <p>Learn how to dispute false advertising, lemon cars, broken service guarantees, and hidden charges.</p>
-            <div class="academy-links">
-              <a href="#" class="academy-link" data-scenario="lemon">Used Car & Lemon Law Explainer <i data-lucide="arrow-right"></i></a>
-              <a href="#" class="academy-link" data-scenario="subscription">Subscription Trap Cancellations <i data-lucide="arrow-right"></i></a>
-              <a href="#" class="academy-link" data-scenario="chargeback">Credit Card Dispute & Chargeback Flow <i data-lucide="arrow-right"></i></a>
-            </div>
-          </div>
+            <!-- Right Content Panels -->
+            <div class="toolkit-content-wrapper">
+              
+              <!-- 1. Vakalatnama Panel -->
+              <div class="toolkit-panel active" id="tool-panel-vakalatnama">
+                <div class="glass-card" style="padding: 20px;">
+                  <h3 style="font-family: var(--font-serif); margin-bottom: 6px;">Vakalatnama Digital Builder</h3>
+                  <p class="subtitle" style="margin-bottom: 16px;">Appoint yourself formally for an active client case. Generates an Indian Court standard Vakalatnama.</p>
+                  
+                  <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start;">
+                    <form id="vakalatnama-form" style="display: flex; flex-direction: column; gap: 12px;">
+                      <div class="form-group">
+                        <label for="vakalatnama-client">Select Case / Client</label>
+                        <select id="vakalatnama-client" required style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--color-thread); color: var(--text-primary); font-family: var(--font-mono); font-size: 11px;">
+                          <option value="Rahul Verma">Rahul Verma (Tenancy Dispute)</option>
+                          <option value="Meera Nair">Meera Nair (Freelance NDA Breach)</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="vakalatnama-court">Court Jurisdiction</label>
+                        <input type="text" id="vakalatnama-court" value="Court of Metropolitan Magistrate, Mumbai" required style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--color-thread); color: var(--text-primary); font-family: var(--font-mono); font-size: 11px;">
+                      </div>
+                      <div class="form-group">
+                        <label for="vakalatnama-case-num">Case / Suit Number</label>
+                        <input type="text" id="vakalatnama-case-num" value="Civil Suit No. 1048 of 2026" required style="width: 100%; padding: 8px; background: rgba(0,0,0,0.4); border: 1px solid var(--color-thread); color: var(--text-primary); font-family: var(--font-mono); font-size: 11px;">
+                      </div>
+                      <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;"><i data-lucide="file-text"></i> Generate & Sign Vakalatnama</button>
+                    </form>
 
-          <!-- Card 4 -->
-          <div class="glass-card academy-card">
-            <div class="card-icon-wrapper bg-soft-amber">
-              <i data-lucide="landmark"></i>
-            </div>
-            <h3>How Courts Work</h3>
-            <p>A step-by-step breakdown of Small Claims Court, Mediation services, and Arbitration.</p>
-            <div class="academy-links">
-              <a href="#" class="academy-link" data-scenario="smallclaims">Small Claims Court Filing Checklist <i data-lucide="arrow-right"></i></a>
-              <a href="#" class="academy-link" data-scenario="mediation">What Happens in Mediation? <i data-lucide="arrow-right"></i></a>
-              <a href="#" class="academy-link" data-scenario="lawyer-fees">How Legal Fees Work (Hourly vs Contingency) <i data-lucide="arrow-right"></i></a>
+                    <!-- Preview Column -->
+                    <div id="vakalatnama-preview-box" class="paper-theme-card" style="background: var(--bg-paper); border: 1px solid var(--color-thread); color: var(--ink-dark); padding: 24px; font-family: var(--font-serif); min-height: 350px; font-size: 11px; line-height: 1.5; position: relative;">
+                      <div style="text-align: center; font-weight: bold; border-bottom: 2px solid var(--ink-dark); padding-bottom: 8px; margin-bottom: 12px;">
+                        VAKALATNAMA<br>
+                        <span style="font-size: 8px; font-family: var(--font-mono); font-weight: normal;">(Under Section 30 of Advocates Act, 1961)</span>
+                      </div>
+                      <p><strong>IN THE COURT OF:</strong> <span id="preview-val-court">Court of Metropolitan Magistrate, Mumbai</span></p>
+                      <p><strong>CASE NO:</strong> <span id="preview-val-case">Civil Suit No. 1048 of 2026</span></p>
+                      <br>
+                      <p>I, <strong><span id="preview-val-client-name">Rahul Verma</span></strong>, do hereby appoint and retain <strong><span class="preview-val-lawyer-name">Sarah Jenkins</span></strong>, Advocate, to appear, plead and act for me as my counsel in the above-mentioned matter.</p>
+                      <br>
+                      <div style="margin-top: 40px; display: flex; justify-content: space-between;">
+                        <div>
+                          <div style="border-top: 1px dashed var(--ink-dark); width: 100px; text-align: center; font-size: 8px; margin-top: 20px;">Client Signature</div>
+                        </div>
+                        <div style="text-align: right;">
+                          <div style="border: 2px dashed rgba(16, 185, 129, 0.4); padding: 4px; font-size: 7px; color: #10b981; font-family: var(--font-mono); display: inline-block; transform: rotate(-5deg);">
+                            SIGNED & VERIFIED VIA AEQUITAS<br>
+                            ADVOCATE: <span class="preview-val-lawyer-name">Sarah Jenkins</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Print Button Overlay -->
+                      <button type="button" id="btn-print-vakalatnama" style="position: absolute; bottom: 10px; right: 10px; padding: 4px 8px; background: rgba(0,0,0,0.05); border: 1px solid var(--color-thread-light); cursor: pointer; font-size: 8px; font-family: var(--font-mono); display: flex; align-items:center; gap:4px; color: var(--ink-dark);"><i data-lucide="printer" style="width: 10px; height:10px;"></i> Print Document</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Court Calendar Panel -->
+              <div class="toolkit-panel" id="tool-panel-calendar" style="display: none;">
+                <div class="glass-card" style="padding: 20px;">
+                  <h3 style="font-family: var(--font-serif); margin-bottom: 6px;">Court Hearing Calendar</h3>
+                  <p class="subtitle" style="margin-bottom: 16px;">Schedule hearings and track cause lists across active cases.</p>
+                  
+                  <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;">
+                    <!-- Calendar List -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                      <h4 style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--accent-indigo); margin-bottom: 4px;">Scheduled Hearings</h4>
+                      <div id="calendar-hearings-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Initial hearings list -->
+                        <div class="glass-card" style="padding: 12px; border-left: 3px solid var(--accent-cyan); background: rgba(255,255,255,0.01);">
+                          <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 4px;">
+                            <span>JULY 5, 2026 • 10:30 AM</span>
+                            <span class="pill-tag text-cyan" style="margin: 0; font-size: 8px;">District Court</span>
+                          </div>
+                          <strong style="font-family: var(--font-serif);">Rahul Verma vs City Landlords</strong>
+                          <p style="font-size: 11px; margin: 4px 0 0 0; color: var(--text-secondary);">Hall 3 • Item No. 14 (Hearing on Interim Stay Application)</p>
+                        </div>
+                        
+                        <div class="glass-card" style="padding: 12px; border-left: 3px solid var(--accent-indigo); background: rgba(255,255,255,0.01);">
+                          <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 4px;">
+                            <span>JULY 12, 2026 • 11:45 AM</span>
+                            <span class="pill-tag text-indigo" style="margin: 0; font-size: 8px;">Bombay High Court</span>
+                          </div>
+                          <strong style="font-family: var(--font-serif);">Meera Nair vs Acme Corp</strong>
+                          <p style="font-size: 11px; margin: 4px 0 0 0; color: var(--text-secondary);">Hall 12 • Item No. 4 (Notice of Motion for Injunction)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Add Hearing Form -->
+                    <div class="glass-card" style="padding: 14px; background: rgba(0,0,0,0.2);">
+                      <h4 style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 12px;">Add Hearing Date</h4>
+                      <form id="hearing-form" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="form-group">
+                          <label for="hearing-client">Client</label>
+                          <select id="hearing-client" required style="width:100%; padding:6px; background:rgba(0,0,0,0.4); border:1px solid var(--color-thread); color:white; font-family:var(--font-mono); font-size:10px;">
+                            <option value="Rahul Verma">Rahul Verma</option>
+                            <option value="Meera Nair">Meera Nair</option>
+                          </select>
+                        </div>
+                        <div class="form-group">
+                          <label for="hearing-court">Court</label>
+                          <input type="text" id="hearing-court" placeholder="E.g., District Court, Mumbai" required style="width:100%; padding:6px; background:rgba(0,0,0,0.4); border:1px solid var(--color-thread); color:white; font-family:var(--font-mono); font-size:10px;">
+                        </div>
+                        <div class="form-group">
+                          <label for="hearing-date">Hearing Date & Time</label>
+                          <input type="datetime-local" id="hearing-date" required style="width:100%; padding:6px; background:rgba(0,0,0,0.4); border:1px solid var(--color-thread); color:white; font-family:var(--font-mono); font-size:10px;">
+                        </div>
+                        <div class="form-group">
+                          <label for="hearing-details">Item No / Stage</label>
+                          <input type="text" id="hearing-details" placeholder="E.g., Hall 4, Item 18 - Arguments" required style="width:100%; padding:6px; background:rgba(0,0,0,0.4); border:1px solid var(--color-thread); color:white; font-family:var(--font-mono); font-size:10px;">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="font-size: 11px; padding: 8px;"><i data-lucide="plus"></i> Add to Calendar</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Escrow Billing Panel -->
+              <div class="toolkit-panel" id="tool-panel-billing" style="display: none;">
+                <div class="glass-card" style="padding: 20px;">
+                  <h3 style="font-family: var(--font-serif); margin-bottom: 6px;">Escrow Invoice & Billing</h3>
+                  <p class="subtitle" style="margin-bottom: 16px;">Request retainer payments securely. Funds are held in Escrow until case milestones are cleared.</p>
+                  
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- Billing Form -->
+                    <div class="glass-card" style="padding: 14px; background: rgba(0,0,0,0.2);">
+                      <h4 style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--accent-emerald); margin-bottom: 12px;">Create Escrow Bill</h4>
+                      <form id="billing-form" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="form-group">
+                          <label for="bill-client">Bill To Client</label>
+                          <select id="bill-client" required style="width:100%; padding:6px; background:rgba(0,0,0,0.4); border:1px solid var(--color-thread); color:white; font-family:var(--font-mono); font-size:10px;">
+                            <option value="rahul-verma">Rahul Verma</option>
+                            <option value="meera-nair">Meera Nair</option>
+                          </select>
+                        </div>
+                        <div class="form-group">
+                          <label for="bill-service">Service / Stage Name</label>
+                          <input type="text" id="bill-service" value="Filing & Summons Stage Fee" required style="width:100%; padding:6px; background:rgba(0,0,0,0.4); border:1px solid var(--color-thread); color:white; font-family:var(--font-mono); font-size:10px;">
+                        </div>
+                        <div class="form-group">
+                          <label for="bill-price">Amount (INR ₹)</label>
+                          <input type="number" id="bill-price" value="5000" required style="width:100%; padding:6px; background:rgba(0,0,0,0.4); border:1px solid var(--color-thread); color:white; font-family:var(--font-mono); font-size:10px;">
+                        </div>
+                        <div class="form-group">
+                          <label for="bill-desc">Milestone Description</label>
+                          <textarea id="bill-desc" required style="width:100%; height: 50px; padding:6px; background:rgba(0,0,0,0.4); border:1px solid var(--color-thread); color:white; font-family:var(--font-sans); font-size:11px;">Covers formal court filing, affidavit compilation, and summons delivery.</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="background: var(--accent-emerald); border-color: var(--accent-emerald); font-size: 11px; padding: 8px;"><i data-lucide="send"></i> Dispatch Escrow Bill</button>
+                      </form>
+                    </div>
+
+                    <!-- Invoices list -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                      <h4 style="font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--text-primary); margin-bottom: 4px;">Recent Invoices</h4>
+                      <div id="invoices-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="glass-card" style="padding: 12px; border-left: 3px solid var(--accent-emerald); background: rgba(255,255,255,0.01); display: flex; justify-content: space-between; align-items: center;">
+                          <div>
+                            <strong style="font-family: var(--font-serif); font-size:12px;">Drafting Fee (Rahul Verma)</strong>
+                            <p style="font-size: 10px; margin: 2px 0 0 0; color: var(--text-muted);">Covers Legal Notice draft • Held in Escrow</p>
+                          </div>
+                          <div style="text-align: right;">
+                            <div style="font-family: var(--font-mono); font-weight: bold; color: var(--accent-emerald);">₹4,500</div>
+                            <span class="pill-tag text-emerald" style="font-size: 8px; margin: 2px 0 0 0; padding: 1px 4px;">Paid</span>
+                          </div>
+                        </div>
+
+                        <div class="glass-card" style="padding: 12px; border-left: 3px solid var(--accent-rose); background: rgba(255,255,255,0.01); display: flex; justify-content: space-between; align-items: center;">
+                          <div>
+                            <strong style="font-family: var(--font-serif); font-size:12px;">Injunction Retainer (Meera Nair)</strong>
+                            <p style="font-size: 10px; margin: 2px 0 0 0; color: var(--text-muted);">Acme Corp Court Filing Fee</p>
+                          </div>
+                          <div style="text-align: right;">
+                            <div style="font-family: var(--font-mono); font-weight: bold; color: var(--accent-rose);">₹8,000</div>
+                            <span class="pill-tag text-rose" style="font-size: 8px; margin: 2px 0 0 0; padding: 1px 4px;">Pending</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. Drafts Panel -->
+              <div class="toolkit-panel" id="tool-panel-drafts" style="display: none;">
+                <div class="glass-card" style="padding: 20px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="font-family: var(--font-serif); margin: 0;">Legal Notice Drafts & Precedents</h3>
+                    <input type="text" id="draft-search-input" placeholder="Search templates..." style="width: 180px; padding: 6px; background: rgba(0,0,0,0.4); border: 1px solid var(--color-thread); color: white; font-family: var(--font-mono); font-size: 10px;">
+                  </div>
+                  
+                  <div style="display: grid; grid-template-columns: 200px 1fr; gap: 20px; align-items: start;">
+                    <!-- Template list -->
+                    <div style="display: flex; flex-direction: column; gap: 8px;" id="draft-templates-list">
+                      <button type="button" class="toolkit-draft-btn active" data-draft-idx="0" style="text-align:left; padding:8px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--color-thread); color:white; font-family:var(--font-mono); font-size:10px; cursor:pointer; width:100%;">
+                        ⚖️ NI Act Sec 138 Notice
+                      </button>
+                      <button type="button" class="toolkit-draft-btn" data-draft-idx="1" style="text-align:left; padding:8px 12px; background:transparent; border:1px solid transparent; color:var(--text-secondary); font-family:var(--font-mono); font-size:10px; cursor:pointer; width:100%;">
+                        🏠 TP Act Sec 106 Notice
+                      </button>
+                      <button type="button" class="toolkit-draft-btn" data-draft-idx="2" style="text-align:left; padding:8px 12px; background:transparent; border:1px solid transparent; color:var(--text-secondary); font-family:var(--font-mono); font-size:10px; cursor:pointer; width:100%;">
+                        📝 Interim Injunction Stay
+                      </button>
+                    </div>
+
+                    <!-- Editor / View area -->
+                    <div class="glass-card" style="padding: 16px; background: rgba(0,0,0,0.15);">
+                      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--color-thread); padding-bottom:8px; margin-bottom:12px;">
+                        <strong id="selected-draft-title" style="font-family:var(--font-serif); font-size:12px;">Section 138 NI Act - Demand Notice for Cheque Bounce</strong>
+                        <button type="button" id="btn-copy-draft" style="padding:4px 8px; background:rgba(255,255,255,0.05); border:1px solid var(--color-thread); color:white; font-family:var(--font-mono); font-size:9px; cursor:pointer; display:flex; align-items:center; gap:4px;"><i data-lucide="copy" style="width:10px; height:10px;"></i> Copy Template</button>
+                      </div>
+                      <textarea id="draft-text-editor" style="width:100%; height:180px; background:rgba(0,0,0,0.3); border:1px solid var(--color-thread); color:var(--text-primary); padding:10px; font-family:var(--font-mono); font-size:10px; line-height:1.4; resize:none;">
+LEGAL NOTICE BY REGISTERED AD / SPEED POST
+
+To,
+[Client Opponent Name / Debtor Name]
+[Opponent Full Address]
+
+Dear Sir/Madam,
+
+Under instructions from my client, Shri [Client Full Name], residing at [Client Address], I hereby serve you with this Legal Notice under Section 138 of the Negotiable Instruments Act, 1881:
+
+1. That you issued a Cheque No. [Cheque Number] dated [Date] drawn on [Bank Name] for an amount of Rs. [Amount in Figures] (Rupees [Amount in Words] Only) towards discharge of your legal liability.
+2. That my client presented the said cheque which was returned unpaid by the bank with the endorsement "Funds Insufficient" on [Bounce Date].
+3. I hereby call upon you to make payment of the said amount of Rs. [Amount] within fifteen (15) days of receipt of this notice, failing which my client shall initiate criminal prosecution.
+
+Advocate [Lawyer Name]
+                      </textarea>
+                      
+                      <!-- Indian Precedents lookup -->
+                      <div style="margin-top: 14px; padding-top:12px; border-top:1px dashed var(--color-thread-light);">
+                        <strong style="font-family:var(--font-mono); font-size:10px; color:var(--accent-rose); display:flex; align-items:center; gap:4px;"><i data-lucide="scale" style="width:12px; height:12px;"></i> Core Precedents:</strong>
+                        <ul style="font-size:10px; color:var(--text-muted); margin:4px 0 0 0; padding-left:14px; line-height:1.4;">
+                          <li><strong>K. Bhaskaran v. Sankaran Vaidhyan Balan (1999)</strong>: Establishes that the notice is deemed served once sent by post to the correct address, even if returned.</li>
+                          <li><strong>MSR Leathers v. S. Palaniappan (2013)</strong>: A cheque bounce notice can be sent multiple times if the cheque is represented.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
-
-        <!-- Plain English FAQ Accordion -->
-        <div class="glass-card academy-faq-section">
-          <h3>Frequently Asked Questions for Beginners</h3>
-          <div class="faq-accordion">
-            <div class="faq-item">
-              <div class="faq-question">
-                <span>Can I represent myself in court if I can't afford a lawyer?</span>
-                <i data-lucide="chevron-down"></i>
-              </div>
-              <div class="faq-answer">
-                <p>Yes. This is called representing yourself <i>"pro se"</i>. In Small Claims Court, representing yourself is actually the standard (and in some jurisdictions, lawyers are not even allowed!). Aequitas helps you build and organize the documents required to represent yourself successfully.</p>
-              </div>
-            </div>
-
-            <div class="faq-item">
-              <div class="faq-question">
-                <span>What is a "Retainer Fee" vs a "Contingency"?</span>
-                <i data-lucide="chevron-down"></i>
-              </div>
-              <div class="faq-answer">
-                <p>A <strong>Retainer Fee</strong> is an upfront down payment made to a lawyer before they start working, which is drawn against as they bill hourly. A <strong>Contingency Fee</strong> means the lawyer receives no payment upfront and takes a percentage (usually 30-40%) of the money recovered. If you lose, they get nothing.</p>
-              </div>
-            </div>
-
-            <div class="faq-item">
-              <div class="faq-question">
-                <span>How do I know if my lawyer is doing a good job?</span>
-                <i data-lucide="chevron-down"></i>
-              </div>
-              <div class="faq-answer">
-                <p>Trustworthy lawyers establish clear milestones, explain strategy in plain English, and provide transparent billing summaries. The Aequitas Case Workspace allows you to see exactly what phase your lawsuit is in, preventing "black box" syndrome.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </section>
       
     </main>

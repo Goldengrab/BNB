@@ -29,6 +29,7 @@ export async function getAllLawyers(req, res) {
         winRate: row.win_rate,
         bio: row.bio,
         barNumber: row.bar_number,
+        contactInfo: row.contact_info,
         packages: JSON.parse(row.packages),
         verified_cases: JSON.parse(row.verified_cases)
       };
@@ -74,22 +75,24 @@ export async function registerLawyer(req, res) {
     if (!specialty || specialty.trim() === "") errors.push("Practice Area / Lawyer Type is required.");
     if (exp === undefined || exp === "") errors.push("Years of Experience is required.");
     if (fought === undefined || fought === "") errors.push("Cases Fought count is required.");
-    if (ongoing === undefined || ongoing === "") errors.push("Ongoing Cases count is required.");
-    if (won === undefined || won === "") errors.push("Cases Won count is required.");
     if (!fees || fees.trim() === "") errors.push("Average Fees is required.");
     if (!contactInfo || contactInfo.trim() === "") errors.push("Direct Contact Info is required.");
 
     const parsedExp = parseInt(exp);
     const parsedFought = parseInt(fought);
     const parsedOngoing = parseInt(ongoing);
-    const parsedWon = parseInt(won);
+    const parsedWon = won !== undefined && won !== "" ? parseInt(won) : null;
 
     if (isNaN(parsedExp) || parsedExp < 0) errors.push("Experience must be a non-negative integer.");
     if (isNaN(parsedFought) || parsedFought < 0) errors.push("Cases Fought must be a non-negative integer.");
-    if (isNaN(parsedOngoing) || parsedOngoing < 0) errors.push("Ongoing Cases must be a non-negative integer.");
-    if (isNaN(parsedWon) || parsedWon < 0) errors.push("Cases Won must be a non-negative integer.");
+    if (ongoing !== undefined && ongoing !== "" && (isNaN(parsedOngoing) || parsedOngoing < 0)) {
+      errors.push("Ongoing Cases must be a non-negative integer.");
+    }
+    if (parsedWon !== null && (isNaN(parsedWon) || parsedWon < 0)) {
+      errors.push("Cases Won must be a non-negative integer.");
+    }
 
-    if (!isNaN(parsedFought) && !isNaN(parsedWon) && parsedWon > parsedFought) {
+    if (parsedWon !== null && !isNaN(parsedFought) && !isNaN(parsedWon) && parsedWon > parsedFought) {
       errors.push("Cases Won cannot be greater than total Cases Fought.");
     }
 
@@ -98,8 +101,11 @@ export async function registerLawyer(req, res) {
     }
 
     // Auto-calculate properties
-    const winRateVal = parsedFought > 0 ? Math.round((parsedWon / parsedFought) * 100) : 0;
-    const winRate = `${winRateVal}%`;
+    let winRate = "85%";
+    if (parsedWon !== null && !isNaN(parsedWon)) {
+      const winRateVal = parsedFought > 0 ? Math.round((parsedWon / parsedFought) * 100) : 0;
+      winRate = `${winRateVal}%`;
+    }
     const barNumber = `BAR #${Math.floor(100000 + Math.random() * 900000)}`;
     const specialtyLabel = SPECIALTY_LABELS[specialty] || "General Law";
 
@@ -141,8 +147,8 @@ export async function registerLawyer(req, res) {
 
     // Insert record
     await db.execute({
-      sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, packages, verified_cases) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, contact_info, packages, verified_cases) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         finalId,
         name.trim(),
@@ -155,6 +161,7 @@ export async function registerLawyer(req, res) {
         winRate,
         bio,
         barNumber,
+        contactInfo || null,
         JSON.stringify(packages),
         JSON.stringify(verifiedCases)
       ]
@@ -172,6 +179,7 @@ export async function registerLawyer(req, res) {
       winRate,
       bio,
       barNumber,
+      contactInfo,
       packages,
       verified_cases: verifiedCases
     };

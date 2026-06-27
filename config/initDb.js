@@ -177,6 +177,7 @@ export async function initDb() {
       win_rate TEXT NOT NULL,
       bio TEXT NOT NULL,
       bar_number TEXT NOT NULL,
+      contact_info TEXT,
       packages TEXT NOT NULL, -- JSON string
       verified_cases TEXT NOT NULL -- JSON string
     )
@@ -204,8 +205,8 @@ export async function initDb() {
     console.log("Seeding database with default lawyers...");
     for (const lawyer of LAWYERS_SEED) {
       await db.execute({
-        sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, packages, verified_cases) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO lawyers (id, name, specialty, specialty_label, avatar_text, avatar_base64, rating, cases_handled, win_rate, bio, bar_number, contact_info, packages, verified_cases) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           lawyer.id,
           lawyer.name,
@@ -218,6 +219,7 @@ export async function initDb() {
           lawyer.winRate,
           lawyer.bio,
           lawyer.barNumber,
+          lawyer.contactInfo || null,
           JSON.stringify(lawyer.packages),
           JSON.stringify(lawyer.verified_cases)
         ]

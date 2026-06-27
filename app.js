@@ -6,10 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize Lucide Icons
   lucide.createIcons();
 
-  // Dynamic API Base URL to allow client-side preview on other servers (e.g. Live Server on port 5500) while communicating with backend on port 3000
-  const API_BASE = window.location.port === '3000' 
-    ? '' 
-    : (window.location.hostname ? `${window.location.protocol}//${window.location.hostname}:3000` : 'http://localhost:3000');
+  // Dynamic API Base URL to allow local testing under Live Server (port 5500)
+  const API_BASE = window.location.port === '5500' ? 'http://localhost:3000' : '';
 
   // ==================== STATE MANAGEMENT ====================
   const state = {
@@ -21,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isWorkspaceInitialized: false,
     userType: null, // 'client' or 'lawyer'
     userProfile: null,
+    activeConsultation: null,
     workspaceData: {
       lawyer: null,
       caseTitle: '',
@@ -55,6 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const otpTimerSeconds = document.getElementById('otp-timer-seconds');
   const btnResendOtp = document.getElementById('btn-resend-otp');
   const btnBackStep1 = document.getElementById('btn-back-to-step1');
+  
+  // Official Advocate Signup selectors
+  const linkGoToAdvocateSignup = document.getElementById('link-go-to-advocate-signup');
+  const btnBackSignupToStep1 = document.getElementById('btn-back-signup-to-step1');
+  const onboardingStepAdvocateSignup = document.getElementById('onboarding-step-advocate-signup');
+  const advocateSignupForm = document.getElementById('advocate-signup-form');
+  const linkSwitchRole = document.getElementById('link-switch-role');
 
   // Avatar inputs
   const clientAvatarFile = document.getElementById('client-avatar-file');
@@ -78,6 +84,63 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       contactInput.value = '';
     });
+  });
+
+  // Navigate to Official Advocate Signup page
+  linkGoToAdvocateSignup.addEventListener('click', (e) => {
+    e.preventDefault();
+    onboardingStep1.style.display = 'none';
+    onboardingStepAdvocateSignup.style.display = 'flex';
+    lucide.createIcons();
+  });
+
+  // Navigate back to Step 1 from Advocate Signup page
+  btnBackSignupToStep1.addEventListener('click', () => {
+    onboardingStepAdvocateSignup.style.display = 'none';
+    onboardingStep1.style.display = 'flex';
+  });
+
+  // Switch Account / Log Out Handler
+  linkSwitchRole.addEventListener('click', (e) => {
+    e.preventDefault();
+    
+    // Reset state
+    state.userType = null;
+    state.userProfile = null;
+    state.activeConsultation = null;
+    state.isWorkspaceInitialized = false;
+
+    // Reset status UI
+    const userRoleEl = document.querySelector('.user-role');
+    const statusTextEl = document.querySelector('.status-text');
+    const statusIndicator = document.querySelector('.status-indicator');
+    
+    userRoleEl.textContent = 'Anonymous Client';
+    statusTextEl.textContent = 'Encrypted Connection';
+    statusIndicator.className = 'status-indicator active';
+    statusIndicator.style.backgroundColor = 'var(--accent-cyan)';
+    statusIndicator.style.boxShadow = '';
+
+    // Remove custom header avatar circle if present
+    const userStatusCard = document.getElementById('user-status');
+    const avatarCircle = userStatusCard.querySelector('.avatar-header-circle');
+    if (avatarCircle) {
+      avatarCircle.remove();
+    }
+
+    linkSwitchRole.style.display = 'none';
+
+    // Show step 1 of onboarding again
+    onboardingStep1.style.display = 'flex';
+    onboardingStep2.style.display = 'none';
+    onboardingStep3Client.style.display = 'none';
+    onboardingStep3Lawyer.style.display = 'none';
+    onboardingStepAdvocateSignup.style.display = 'none';
+    onboardingOverlay.style.display = 'flex';
+
+    // Update navigation to default client view
+    updateNavForUserRole();
+    switchTab('analyzer');
   });
 
   // Step 1: Submit Contact info
@@ -171,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Step 2: Submit OTP verification
-  otpForm.addEventListener('submit', (e) => {
+  otpForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     let enteredCode = '';
@@ -181,11 +244,164 @@ document.addEventListener('DOMContentLoaded', () => {
     clearInterval(otpTimerInterval);
     onboardingStep2.style.display = 'none';
 
-    // Route to appropriate profile builder
-    if (onboardingRole === 'client') {
-      onboardingStep3Client.style.display = 'flex';
+    try {
+      // Check the database via login API
+      const loginResponse = await fetch(`${API_BASE}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contact: onboardingContactVal,
+          role: onboardingRole
+        })
+      });
+
+      if (loginResponse.ok) {
+        const loginData = await loginResponse.json();
+
+        if (loginData.exists) {
+          const user = loginData.user;
+          state.userType = onboardingRole;
+          state.userProfile = user;
+
+          // Update UI Status Card in header
+          const userRoleEl = document.querySelector('.user-role');
+          const statusTextEl = document.querySelector('.status-text');
+          const statusIndicator = document.querySelector('.status-indicator');
+          
+          userRoleEl.textContent = user.name;
+          
+          if (onboardingRole === 'lawyer') {
+            statusTextEl.textContent = user.status === 'Pending Verification' 
+              ? 'Pending Verification' 
+              : 'Bar Verified & Active';
+
+            statusIndicator.className = 'status-indicator';
+            statusIndicator.style.backgroundColor = user.status === 'Pending Verification' 
+              ? 'var(--text-muted)' 
+              : 'var(--accent-cyan)';
+            statusIndicator.style.boxShadow = user.status === 'Pending Verification' 
+              ? 'none' 
+              : '0 0 8px var(--accent-cyan)';
+          } else {
+            statusTextEl.textContent = `${user.city} • Client`;
+            statusIndicator.className = 'status-indicator active';
+            statusIndicator.style.backgroundColor = 'var(--accent-indigo)';
+          }
+
+          // Update avatar circle in header status card
+          const userStatusCard = document.getElementById('user-status');
+          let avatarCircle = userStatusCard.querySelector('.avatar-header-circle');
+          if (!avatarCircle) {
+            avatarCircle = document.createElement('div');
+            avatarCircle.className = 'avatar-header-circle';
+            avatarCircle.style.width = '32px';
+            avatarCircle.style.height = '32px';
+            avatarCircle.style.borderRadius = '50%';
+            avatarCircle.style.marginRight = '8px';
+            avatarCircle.style.overflow = 'hidden';
+            avatarCircle.style.background = onboardingRole === 'lawyer' 
+              ? 'linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo))'
+              : 'linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan))';
+            avatarCircle.style.display = 'flex';
+            avatarCircle.style.alignItems = 'center';
+            avatarCircle.style.justify = 'center';
+            avatarCircle.style.color = 'white';
+            avatarCircle.style.fontSize = '10px';
+            avatarCircle.style.fontWeight = 'bold';
+            userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
+          }
+          
+          const avatarSrc = onboardingRole === 'lawyer' ? user.avatarBase64 : user.avatar;
+          if (avatarSrc) {
+            avatarCircle.innerHTML = `<img src="${avatarSrc}" style="width:100%; height:100%; object-fit:cover;">`;
+          } else {
+            avatarCircle.textContent = onboardingRole === 'lawyer' 
+              ? user.avatarText 
+              : (user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'CL');
+          }
+
+          // If logging in as lawyer and they are not in the local in-memory LAWYERS_DATABASE, let's prepend them
+          if (onboardingRole === 'lawyer') {
+            const index = LAWYERS_DATABASE.findIndex(l => l.id === user.id);
+            if (index === -1) {
+              LAWYERS_DATABASE.unshift(user);
+              renderLawyers();
+            }
+          }
+
+          linkSwitchRole.style.display = 'inline-block';
+          updateNavForUserRole();
+          switchTab('workspace');
+          lucide.createIcons();
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Error during login check:', err);
+    }
+
+    // Fallback: Check local memory LAWYERS_DATABASE if database check failed (for seeded data in UI)
+    const existingLawyer = onboardingRole === 'lawyer' && onboardingContactVal 
+      ? LAWYERS_DATABASE.find(lawyer => 
+          (lawyer.contactInfo && lawyer.contactInfo.toLowerCase() === onboardingContactVal.toLowerCase()) || 
+          (lawyer.barNumber && lawyer.barNumber.toLowerCase() === onboardingContactVal.toLowerCase())
+        )
+      : null;
+
+    if (existingLawyer) {
+      state.userType = 'lawyer';
+      state.userProfile = existingLawyer;
+
+      // Update UI
+      const userRoleEl = document.querySelector('.user-role');
+      const statusTextEl = document.querySelector('.status-text');
+      const statusIndicator = document.querySelector('.status-indicator');
+      
+      userRoleEl.textContent = existingLawyer.name;
+      statusTextEl.textContent = existingLawyer.status === 'Pending Verification' 
+        ? 'Pending Verification' 
+        : 'Bar Verified & Active';
+
+      statusIndicator.className = 'status-indicator';
+      statusIndicator.style.backgroundColor = existingLawyer.status === 'Pending Verification' 
+        ? 'var(--text-muted)' 
+        : 'var(--accent-cyan)';
+      statusIndicator.style.boxShadow = existingLawyer.status === 'Pending Verification' 
+        ? 'none' 
+        : '0 0 8px var(--accent-cyan)';
+
+      // Update avatar
+      const userStatusCard = document.getElementById('user-status');
+      let avatarCircle = userStatusCard.querySelector('.avatar-header-circle');
+      if (!avatarCircle) {
+        avatarCircle = document.createElement('div');
+        avatarCircle.className = 'avatar-header-circle';
+        avatarCircle.style.width = '32px';
+        avatarCircle.style.height = '32px';
+        avatarCircle.style.borderRadius = '50%';
+        avatarCircle.style.marginRight = '8px';
+        avatarCircle.style.overflow = 'hidden';
+        avatarCircle.style.background = 'linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo))';
+        avatarCircle.style.display = 'flex';
+        avatarCircle.style.alignItems = 'center';
+        avatarCircle.style.justify = 'center';
+        avatarCircle.style.color = 'white';
+        avatarCircle.style.fontSize = '10px';
+        avatarCircle.style.fontWeight = 'bold';
+        userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
+      }
+      avatarCircle.textContent = existingLawyer.avatarText;
+
+      linkSwitchRole.style.display = 'inline-block';
+      updateNavForUserRole();
+      switchTab('workspace');
     } else {
-      onboardingStep3Lawyer.style.display = 'flex';
+      // Route to appropriate profile builder
+      if (onboardingRole === 'client') {
+        onboardingStep3Client.style.display = 'flex';
+      } else {
+        onboardingStep3Lawyer.style.display = 'flex';
+      }
     }
     lucide.createIcons();
   });
@@ -218,42 +434,43 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Step 3A: Submit Client Profile
-  clientProfileForm.addEventListener('submit', (e) => {
+  clientProfileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('client-name').value.trim();
     const city = document.getElementById('client-city').value.trim();
     const interestVal = document.getElementById('client-interest').value;
 
-    const requestBody = {
-      name,
-      city,
-      contact: onboardingContactVal,
-      avatar: clientAvatarBase64,
-      interest: interestVal
-    };
+    try {
+      const response = await fetch(`${API_BASE}/api/clients`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name,
+          city: city,
+          contact: onboardingContactVal,
+          avatar: clientAvatarBase64,
+          interest: interestVal
+        })
+      });
 
-    fetch(`${API_BASE}/api/clients`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    })
-    .then(res => {
-      if (!res.ok) throw new Error('Client profile registration failed.');
-      return res.json();
-    })
-    .then(data => {
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to register client profile');
+      }
+
+      const result = await response.json();
+      const savedClient = result.client;
+
       state.userType = 'client';
-      state.userProfile = data.client;
+      state.userProfile = savedClient;
 
       // Update Client Status UI in header
       const userRoleEl = document.querySelector('.user-role');
       const statusTextEl = document.querySelector('.status-text');
       const statusIndicator = document.querySelector('.status-indicator');
       
-      userRoleEl.textContent = name;
-      statusTextEl.textContent = `${city} • Client`;
+      userRoleEl.textContent = savedClient.name;
+      statusTextEl.textContent = `${savedClient.city} • Client`;
       statusIndicator.className = 'status-indicator active';
       statusIndicator.style.backgroundColor = 'var(--accent-indigo)';
 
@@ -279,27 +496,32 @@ document.addEventListener('DOMContentLoaded', () => {
         userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
       }
 
-      if (clientAvatarBase64) {
-        avatarCircle.innerHTML = `<img src="${clientAvatarBase64}" style="width:100%; height:100%; object-fit:cover;">`;
+      if (savedClient.avatar) {
+        avatarCircle.innerHTML = `<img src="${savedClient.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
       } else {
-        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const initials = savedClient.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
         avatarCircle.textContent = initials || 'CL';
       }
 
       // Dynamic case analyzer autofill city/interest
-      filterSpecialty.value = interestVal;
+      filterSpecialty.value = savedClient.interest;
       
+      // Update navigation tabs based on role
+      updateNavForUserRole();
+
+      // Show switch account option
+      linkSwitchRole.style.display = 'inline-block';
+
       // Hide onboarding overlay
       onboardingOverlay.style.display = 'none';
-    })
-    .catch(err => {
-      alert('Error registering client: ' + err.message);
-      console.error(err);
-    });
+    } catch (err) {
+      console.error('Error saving client profile:', err);
+      alert('Could not save client profile: ' + err.message);
+    }
   });
 
   // Step 3B: Submit Lawyer Profile
-  lawyerProfileForm.addEventListener('submit', (e) => {
+  lawyerProfileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('lawyer-name').value.trim();
     const gender = document.getElementById('lawyer-gender').value;
@@ -309,55 +531,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const exp = document.getElementById('lawyer-exp').value;
     const fought = parseInt(document.getElementById('lawyer-fought').value);
     const ongoing = parseInt(document.getElementById('lawyer-ongoing').value);
-    const won = parseInt(document.getElementById('lawyer-won').value);
     const fees = document.getElementById('lawyer-fees').value.trim();
     const contactInfo = document.getElementById('lawyer-contact-info').value.trim();
 
-    const requestBody = {
-      name,
-      gender,
-      city,
-      position,
-      specialty,
-      exp,
-      fought,
-      ongoing,
-      won,
-      fees,
-      contactInfo,
-      avatarBase64: lawyerAvatarBase64
-    };
+    try {
+      const response = await fetch(`${API_BASE}/api/lawyers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          gender,
+          city,
+          position,
+          specialty,
+          exp,
+          fought,
+          ongoing,
+          fees,
+          contactInfo,
+          avatarBase64: lawyerAvatarBase64
+        })
+      });
 
-    fetch(`${API_BASE}/api/lawyers`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    })
-    .then(res => {
-      if (!res.ok) {
-        return res.json().then(errData => {
-          throw new Error(errData.details ? errData.details.join('\n') : errData.error || 'Failed to register');
-        });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to register advocate profile');
       }
-      return res.json();
-    })
-    .then(data => {
-      const newLawyer = data.lawyer;
+
+      const result = await response.json();
+      const savedLawyer = result.lawyer;
 
       // Prepend to lawyers array
-      LAWYERS_DATABASE.unshift(newLawyer);
+      LAWYERS_DATABASE.unshift(savedLawyer);
 
       state.userType = 'lawyer';
-      state.userProfile = newLawyer;
+      state.userProfile = savedLawyer;
 
       // Update Status UI in header
       const userRoleEl = document.querySelector('.user-role');
       const statusTextEl = document.querySelector('.status-text');
       const statusIndicator = document.querySelector('.status-indicator');
       
-      userRoleEl.textContent = name;
+      userRoleEl.textContent = savedLawyer.name;
       statusTextEl.textContent = `${city} • Advocate`;
       statusIndicator.className = 'status-indicator active';
       statusIndicator.style.backgroundColor = 'var(--accent-cyan)';
@@ -384,47 +599,196 @@ document.addEventListener('DOMContentLoaded', () => {
         userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
       }
 
-      if (lawyerAvatarBase64) {
-        avatarCircle.innerHTML = `<img src="${lawyerAvatarBase64}" style="width:100%; height:100%; object-fit:cover;">`;
+      if (savedLawyer.avatarBase64) {
+        avatarCircle.innerHTML = `<img src="${savedLawyer.avatarBase64}" style="width:100%; height:100%; object-fit:cover;">`;
       } else {
-        avatarCircle.textContent = newLawyer.avatarText;
+        avatarCircle.textContent = savedLawyer.avatarText;
       }
+
+      // Update navigation tabs visibility based on role
+      updateNavForUserRole();
+
+      // Show switch account option
+      linkSwitchRole.style.display = 'inline-block';
 
       // Close overlay
       onboardingOverlay.style.display = 'none';
 
-      // Reload lawyers database and then route to directory to show the card
-      loadLawyers().then(() => {
-        renderLawyers();
-        switchTab('matchmaker');
-      });
-    })
-    .catch(err => {
-      alert('Registration error:\n' + err.message);
-      console.error(err);
-    });
-  });
-
-  // ==================== BACKEND DATABASE INTEGRATION ====================
-  let LAWYERS_DATABASE = [];
-
-  async function loadLawyers() {
-    try {
-      const response = await fetch(`${API_BASE}/api/lawyers`);
-      if (response.ok) {
-        LAWYERS_DATABASE = await response.json();
-      } else {
-        console.error("API returned error status fetching lawyers:", response.status);
-      }
-    } catch (error) {
-      console.error("Failed to load lawyers from backend:", error);
+      // Route to Case Workspace caseload page
+      switchTab('workspace');
+    } catch (err) {
+      console.error('Error saving advocate profile:', err);
+      alert('Could not save advocate profile: ' + err.message);
     }
-  }
-
-  // Load lawyers immediately on startup
-  loadLawyers().then(() => {
-    renderLawyers();
   });
+
+  // ==================== MOCK DATABASES ====================
+  let LAWYERS_DATABASE = [
+    {
+      id: 'sarah-jenkins',
+      name: 'Sarah Jenkins, Esq.',
+      specialty: 'tenancy',
+      specialtyLabel: 'Tenancy & Housing Law',
+      avatarText: 'SJ',
+      rating: '4.9',
+      casesHandled: 42,
+      ongoingCases: 4,
+      bio: 'Former Housing Authority Counsel. Dedicated to representing tenants against predatory landlords, security deposit withholding, and illegal lockouts.',
+      barNumber: 'CA #582910',
+      contactInfo: 'sarah@lawyer.com',
+      packages: [
+        { name: 'Demand Letter & Review', price: '₹1,500', desc: 'Drafting formal notice to landlord and reviewing response.' },
+        { name: 'Small Claims Prep', price: '₹4,500', desc: 'Full evidence compilation, witness sheets, and courtroom rehearsal.' },
+        { name: 'Full Litigation Retainer', price: '₹18,000', desc: 'Comprehensive court representation and mediation filings.' }
+      ],
+      verified_cases: [
+        { case_type: "Security Deposit Recovery Claim", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Illegal Eviction Notice Defense", year: 2023, court_level: "District Court", role: "Respondent's Counsel" },
+        { case_type: "Rent Control Compliance Audit", year: 2023, court_level: "Tribunal", role: "Respondent's Counsel" },
+        { case_type: "Habitability Failure & Repair Suit", year: 2022, court_level: "District Court", role: "Petitioner's Counsel" }
+      ]
+    },
+    {
+      id: 'marcus-vance',
+      name: 'Marcus Vance',
+      specialty: 'employment',
+      specialtyLabel: 'Employment & Labor Law',
+      avatarText: 'MV',
+      rating: '4.8',
+      casesHandled: 67,
+      ongoingCases: 6,
+      bio: 'Fierce advocate for freelance designers, contractors, and employees facing unpaid wages, wage theft, misclassification, and overtime violations.',
+      barNumber: 'NY #392815',
+      contactInfo: 'marcus@lawyer.com',
+      packages: [
+        { name: 'Freelancer Invoice Recovery', price: '₹2,500', desc: 'Official breach of contract letter and settlement negotiations.' },
+        { name: 'Labor Board Filing Support', price: '₹6,000', desc: 'Drafting state labor agency claims and evidence audit.' },
+        { name: 'Employment Suit Representation', price: 'Contingency', desc: 'No upfront fee. 30% of recovered settlement.' }
+      ],
+      verified_cases: [
+        { case_type: "Freelance Unpaid Invoice Suit", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Employee Wage & Overtime Misclassification", year: 2023, court_level: "Tribunal", role: "Petitioner's Counsel" },
+        { case_type: "Covenant Not to Compete Invalidation", year: 2023, court_level: "High Court", role: "Petitioner's Counsel" },
+        { case_type: "Severance Package Discrepancy Dispute", year: 2022, court_level: "District Court", role: "Respondent's Counsel" }
+      ]
+    },
+    {
+      id: 'elena-rostova',
+      name: 'Elena Rostova',
+      specialty: 'contract',
+      specialtyLabel: 'Contracts & Freelance',
+      avatarText: 'ER',
+      rating: '4.9',
+      casesHandled: 84,
+      ongoingCases: 8,
+      bio: 'Specializes in tech freelance agreements, IP transfers, non-compete clauses, and drafting robust service agreements to prevent litigation.',
+      barNumber: 'TX #482910',
+      contactInfo: 'elena@lawyer.com',
+      packages: [
+        { name: 'Contract Revision Audit', price: '₹2,000', desc: 'Line-by-line contract review and markup with redlines.' },
+        { name: 'Template Suite Bundle', price: '₹4,000', desc: '3 customized client contract templates for your business.' },
+        { name: 'Custom Agreement Drafting', price: '₹7,500', desc: 'Full custom contract drafting tailored to your specific project.' }
+      ],
+      verified_cases: [
+        { case_type: "SaaS IP Assignment Breach", year: 2024, court_level: "High Court", role: "Respondent's Counsel" },
+        { case_type: "NDA Violation Enforcement Claim", year: 2023, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Contractor Service Default Arbitration", year: 2023, court_level: "Tribunal", role: "Respondent's Counsel" }
+      ]
+    },
+    {
+      id: 'david-kim',
+      name: 'David Kim',
+      specialty: 'consumer',
+      specialtyLabel: 'Consumer Protection',
+      avatarText: 'DK',
+      rating: '4.7',
+      casesHandled: 53,
+      ongoingCases: 5,
+      bio: 'Helping buyers challenge dishonest dealerships, defective appliances (lemon laws), hidden billing subscriptions, and credit reporting errors.',
+      barNumber: 'IL #928374',
+      contactInfo: 'david@lawyer.com',
+      packages: [
+        { name: 'Dealer Demand Notice', price: '₹2,200', desc: 'Official letter detailing Lemon Law codes and replacement demand.' },
+        { name: 'Arbitration Filing Pack', price: '₹5,000', desc: 'Drafting files and evidence binders for consumer arbitration boards.' },
+        { name: 'Court Action Retainer', price: '₹12,000', desc: 'Filing state civil action against manufacturer or dealer.' }
+      ],
+      verified_cases: [
+        { case_type: "Used Car Dealership Odometer Fraud", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Unfair Subscription Billing Class Action", year: 2023, court_level: "High Court", role: "Petitioner's Counsel" },
+        { case_type: "Appliances Lemon Law Compensation Claim", year: 2023, court_level: "Tribunal", role: "Petitioner's Counsel" },
+        { case_type: "Credit Bureau Reporting Error Settlement", year: 2022, court_level: "District Court", role: "Petitioner's Counsel" }
+      ]
+    },
+    {
+      id: 'samira-patel',
+      name: 'Samira Patel',
+      specialty: 'tenancy',
+      specialtyLabel: 'Tenancy & Housing Law',
+      avatarText: 'SP',
+      rating: '4.9',
+      casesHandled: 31,
+      ongoingCases: 3,
+      bio: 'Passionate about housing access. Specializes in habitability issues (mold, water leaks), retaliatory rent hikes, and local rent control disputes.',
+      barNumber: 'CA #619384',
+      contactInfo: 'samira@lawyer.com',
+      packages: [
+        { name: 'Notice of Violation Draft', price: '₹1,800', desc: 'Official notice demanding repairs with code inspector cites.' },
+        { name: 'Mediation Representation', price: '₹5,000', desc: 'Preparation and advocacy at voluntary mediation boards.' },
+        { name: 'Rent Escrow Filing Support', price: '₹8,000', desc: 'Filing to deposit rent with court until repairs are finished.' }
+      ],
+      verified_cases: [
+        { case_type: "Illegal Lockout & Security Deposit Refund", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Retaliatory Rent Increase Appeal", year: 2023, court_level: "Tribunal", role: "Petitioner's Counsel" },
+        { case_type: "Water Intrusion & Black Mold Liability", year: 2022, court_level: "District Court", role: "Petitioner's Counsel" }
+      ]
+    },
+    {
+      id: 'robert-vance',
+      name: 'Robert Vance, Esq.',
+      specialty: 'criminal',
+      specialtyLabel: 'Criminal Defense',
+      avatarText: 'RV',
+      rating: '4.8',
+      casesHandled: 92,
+      ongoingCases: 9,
+      bio: 'Providing aggressive representation for criminal defense. Specialized in theft, traffic violations, misdemeanors, and civil rights disputes.',
+      barNumber: 'CA #928310',
+      contactInfo: 'robert@lawyer.com',
+      packages: [
+        { name: 'Arrest & Bail consultation', price: '₹3,000', desc: 'Urgent consultation on legal rights and bail structure.' },
+        { name: 'Trial Defense Retainer', price: '₹25,000', desc: 'Court appearance defense and discovery audit.' }
+      ],
+      verified_cases: [
+        { case_type: "Misdemeanor Theft Charge Dismissal", year: 2024, court_level: "District Court", role: "Respondent's Counsel" },
+        { case_type: "First-Offense DUI Citation Appeal", year: 2023, court_level: "District Court", role: "Respondent's Counsel" },
+        { case_type: "Search Warrant Evidence Suppression Hearing", year: 2023, court_level: "High Court", role: "Respondent's Counsel" },
+        { case_type: "Civil Rights Arrest Warrant Invalidation", year: 2022, court_level: "High Court", role: "Respondent's Counsel" }
+      ]
+    },
+    {
+      id: 'priya-sharma',
+      name: 'Priya Sharma',
+      specialty: 'family',
+      specialtyLabel: 'Family Law & Divorce',
+      avatarText: 'PS',
+      rating: '4.9',
+      casesHandled: 58,
+      ongoingCases: 5,
+      bio: 'Compassionate family law attorney. Focused on mutual consent divorce, child custody rights, alimony audits, and marital property settlements.',
+      barNumber: 'NY #618290',
+      contactInfo: 'priya@lawyer.com',
+      packages: [
+        { name: 'Divorce Mediation Consultation', price: '₹2,500', desc: 'Review of mediation steps, asset splits, and child custody rules.' },
+        { name: 'Mutual Consent Filing Pack', price: '₹8,000', desc: 'Drafting all mutual separation agreements and court filing support.' }
+      ],
+      verified_cases: [
+        { case_type: "Mutual Separation Agreement Petition", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Joint Custody & Visitation Dispute", year: 2023, court_level: "District Court", role: "Petitioner's Counsel" },
+        { case_type: "Alimony Support Revision Appeal", year: 2023, court_level: "High Court", role: "Respondent's Counsel" },
+        { case_type: "Marital Asset Partition Dispute", year: 2022, court_level: "Tribunal", role: "Petitioner's Counsel" }
+      ]
+    }
+  ];
 
   const MOCK_CONTRACT_AUDITS = {
     lease: {
@@ -436,7 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
           num: 'Section 14(b) - Fees',
           severity: 'warning',
           severityText: 'Legal Violation',
-          original: '“In the event Rent is not received by the 2nd day, Tenant agrees to pay a late fee of $150.00, plus an additional $25.00 for every day the payment remains unpaid.”',
+          original: '“In the event Rent is not received by the 2nd day, Tenant agrees to pay a late fee of ₹1,500.00, plus an additional ₹250.00 for every day the payment remains unpaid.”',
           explanation: 'This late fee structure is punitive and disproportionate. Local laws limit late fees to a reasonable cost incurred by the landlord, typically capped at 5% of monthly rent.',
           remedy: 'Request that the daily compounding fee be deleted and the late fee capped at 5% after a 5-day grace period.'
         },
@@ -477,7 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
           severityText: 'Scope Creep Risk',
           original: '“Designer agrees to make edits, additions, and modifications to the work as requested by the Client until Client is fully satisfied.”',
           explanation: 'Allows client to demand unlimited revisions without additional compensation, leading to severe scope creep.',
-          remedy: 'Amend to: "Pricing includes up to two (2) rounds of major revisions. Any additional revisions will be billed at $75/hour."'
+          remedy: 'Amend to: "Pricing includes up to two (2) rounds of major revisions. Any additional revisions will be billed at ₹1,000/hour."'
         },
         {
           num: 'Section 11 - Disputes',
@@ -624,7 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Special scroll triggers or logic when entering tabs
     if (tabId === 'matchmaker') {
-      loadLawyers().then(() => renderLawyers());
+      renderLawyers();
     }
   }
 
@@ -715,9 +1079,9 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'Contract / Mutual Dispute',
       viability: 65,
       viabilityOffset: 221, // math calculation of stroke-dashoffset
-      claimValue: '$1,200',
+      claimValue: '₹12,000',
       actionability: 'Moderate',
-      filingCosts: '$75 - $150',
+      filingCosts: '₹750 - ₹1,500',
       narrative: 'Based on your description, this dispute involves a general breach of mutual obligations. Since you have documentation, a breach of contract claim is viable. We advise requesting voluntary mediation before pursuing small claims actions.',
       steps: [
         'Collect all contract documents and communications in a secure folder.',
@@ -734,9 +1098,9 @@ document.addEventListener('DOMContentLoaded', () => {
         title: 'Security Deposit & Tenancy Dispute',
         viability: 82,
         viabilityColor: '#10b981',
-        claimValue: '$1,500 - $3,000',
+        claimValue: '₹15,000 - ₹30,000',
         actionability: 'Strong',
-        filingCosts: '$45 - $90',
+        filingCosts: '₹450 - ₹900',
         narrative: 'Your landlord is legally required to return your security deposit within a strict statutory deadline (often 21 days) or provide an itemized list of deductions. Normal wear and tear (like light cabinet scratches) cannot be deducted. You have a very strong case if photos confirm the condition.',
         steps: [
           'Send a certified Tenant Demand Letter requesting full refund of deposit.',
@@ -751,9 +1115,9 @@ document.addEventListener('DOMContentLoaded', () => {
         title: 'Unpaid Wages & Breach of Service Contract',
         viability: 75,
         viabilityColor: '#10b981',
-        claimValue: '$3,200 - $5,000',
+        claimValue: '₹32,000 - ₹50,000',
         actionability: 'Strong',
-        filingCosts: '$50 - $110',
+        filingCosts: '₹500 - ₹1,100',
         narrative: 'Freelance agreements and employment contracts are fully enforceable. If services were rendered and accepted, withholding payment is a breach. Many jurisdictions impose prompt payment penalties on clients who stall freelance invoices.',
         steps: [
           'Send a formal "Letter of Intent to Sue" giving 7 business days to pay.',
@@ -768,9 +1132,9 @@ document.addEventListener('DOMContentLoaded', () => {
         title: 'Used Car / Lemon Law Warranty Conflict',
         viability: 58,
         viabilityColor: '#f59e0b',
-        claimValue: '$3,500 - $7,500',
+        claimValue: '₹35,000 - ₹75,000',
         actionability: 'Moderate',
-        filingCosts: '$120 - $220',
+        filingCosts: '₹1,200 - ₹2,200',
         narrative: 'Used car warranty claims depend heavily on the written warranty agreement ("As-Is" vs Certified Guarantee). Verbal promises during sales are notoriously hard to prove in court, but dealer failure to disclose known major defects (fraud) is actionable.',
         steps: [
           'Obtain an independent mechanic inspection documenting the cause of transmission failure.',
@@ -852,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Pricing Filter
       if (pricingVal !== 'all') {
         const hasMatchingPackage = lawyer.packages.some(pkg => {
-          if (pricingVal === 'flat' && pkg.price.includes('$') && parseInt(pkg.price.replace('$', '')) < 1000) return true;
+          if (pricingVal === 'flat' && (pkg.price.includes('₹') || pkg.price.includes('Rs.')) && parseInt(pkg.price.replace('₹', '').replace('Rs.', '').replace(',', '')) < 10000) return true;
           if (pricingVal === 'hourly' && pkg.name.toLowerCase().includes('hourly')) return true;
           if (pricingVal === 'contingency' && pkg.price.toLowerCase().includes('contingency')) return true;
           return false;
@@ -863,13 +1227,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pricingVal === 'contingency' && !lawyer.packages.some(p => p.price.toLowerCase().includes('contingency'))) return false;
       }
 
-      // Performance Filter
+      // Experience Filter (based on Total Cases Handled)
       if (expVal === 'high') {
-        const rate = parseInt(lawyer.winRate.replace('%', ''));
-        if (rate < 92) return false;
+        if (lawyer.casesHandled < 50) return false;
       } else if (expVal === 'medium') {
-        const rate = parseInt(lawyer.winRate.replace('%', ''));
-        if (rate < 80) return false;
+        if (lawyer.casesHandled < 20) return false;
       }
 
       return true;
@@ -906,23 +1268,27 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `<img src="${lawyer.avatarBase64}" alt="${lawyer.name}" style="width:100%; height:100%; object-fit:cover;">`
         : lawyer.avatarText;
 
+      const verificationBadge = lawyer.status === 'Pending Verification'
+        ? `<span class="tag pending" style="border: 1px dashed var(--text-muted); color: var(--text-secondary); background: rgba(255, 255, 255, 0.02); font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; letter-spacing: 0.05em;"><i data-lucide="clock" style="width:12px; height:12px;"></i> Pending Verification</span>`
+        : `<span class="bar-verification-tag"><i data-lucide="shield-check"></i> Bar Verified & Active</span>`;
+
       card.innerHTML = `
         <div class="lawyer-card-header">
           <div class="avatar">${avatarHTML}</div>
           <div class="lawyer-meta">
             <h3>${lawyer.name}</h3>
             <span class="specialty-label text-accent ${lawyer.specialty}">${lawyer.specialtyLabel}</span>
-            <span class="bar-verification-tag"><i data-lucide="shield-check"></i> Bar Verified & Active</span>
+            ${verificationBadge}
           </div>
         </div>
         <div class="lawyer-perf">
           <div class="perf-stat">
-            <span class="label">win rate</span>
-            <span class="val text-emerald">${lawyer.winRate}</span>
+            <span class="label">total cases</span>
+            <span class="val">${lawyer.casesHandled}</span>
           </div>
           <div class="perf-stat">
-            <span class="label">similar cases</span>
-            <span class="val">${lawyer.casesHandled}+</span>
+            <span class="label">ongoing cases</span>
+            <span class="val">${lawyer.ongoingCases || 0}</span>
           </div>
         </div>
         <p class="lawyer-card-desc">${lawyer.bio}</p>
@@ -1191,6 +1557,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close Modal
     bookingModal.style.display = 'none';
+
+    state.activeConsultation = {
+      brief: notes || `${lawyer.specialtyLabel} Consultation Request`,
+      date: dateVal,
+      mode: modeVal
+    };
 
     // Set Workspace variables
     state.isWorkspaceInitialized = true;
@@ -1698,6 +2070,865 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Pre-load default lawyers on start
+  // Handle Official Advocate Signup Form Submit
+  advocateSignupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('signup-lawyer-name').value.trim();
+    const city = document.getElementById('signup-lawyer-city').value.trim();
+    const stateCode = document.getElementById('signup-lawyer-state').value;
+    const enrolment = document.getElementById('signup-lawyer-enrolment').value.trim();
+    const specialty = document.getElementById('signup-lawyer-specialty').value;
+    const exp = parseInt(document.getElementById('signup-lawyer-exp').value);
+    const verdictContainer = document.getElementById('signup-ai-verdict-container');
+    const submitBtn = advocateSignupForm.querySelector('button[type="submit"]');
+
+    // 1. Format Validation
+    const enrolmentRegex = new RegExp(`^${stateCode}\\/(\\d+)\\/(\\d{4})$`, 'i');
+    const match = enrolment.match(enrolmentRegex);
+
+    if (!match) {
+      alert(`Invalid Bar Enrolment number format! For the selected State Bar, it must match the pattern: ${stateCode}/[digits]/[4-digit-year] (e.g., ${stateCode}/1234/2015).`);
+      return;
+    }
+
+    const number = parseInt(match[1]);
+    const enrolmentYear = parseInt(match[2]);
+    const currentYear = 2026;
+
+    // Year limits: not in the future, not before 1961 (Advocates Act year)
+    if (enrolmentYear > currentYear) {
+      alert(`Enrolment year (${enrolmentYear}) cannot be in the future!`);
+      return;
+    }
+    if (enrolmentYear < 1961) {
+      alert(`Enrolment year (${enrolmentYear}) cannot be before the Advocates Act of 1961!`);
+      return;
+    }
+
+    const maxExp = currentYear - enrolmentYear;
+    if (exp > maxExp) {
+      alert(`Invalid experience! Claimed experience (${exp} years) cannot exceed the time since your enrolment year ${enrolmentYear} (maximum possible is ${maxExp} years).`);
+      return;
+    }
+
+    // 2. AI Consistency Check (Claude API or fallback)
+    submitBtn.disabled = true;
+    verdictContainer.style.display = 'block';
+    verdictContainer.innerHTML = `
+      <div style="font-family: var(--font-mono); font-size:11px; color: var(--text-secondary); display: flex; align-items:center; gap:6px;">
+        <span class="pulse" style="width:8px; height:8px; background:var(--color-thread); border-radius:50%;"></span>
+        Verifying enrolment consistency with Claude...
+      </div>
+    `;
+
+    try {
+      const checkResult = await checkEnrolmentConsistencyWithClaude(name, stateCode, enrolment, exp);
+      
+      const stampClass = checkResult.plausible ? 'match' : 'no-match';
+      const stampText = checkResult.plausible ? 'SANITY CHECK PASSED' : 'CONSISTENCY CONFLICT';
+
+      verdictContainer.innerHTML = `
+        <div class="verdict-stamp ${stampClass}" style="margin-bottom: 6px;">
+          ${stampText}
+        </div>
+        <p class="verdict-stamp-explanation" style="font-size: 11px; margin-bottom: 12px;">${checkResult.note}</p>
+      `;
+
+      if (!checkResult.plausible) {
+        // Allow them to correct it if it fails
+        submitBtn.disabled = false;
+        return;
+      }
+
+      // If check passes, register the advocate (with Pending status)
+      try {
+        const response = await fetch(`${API_BASE}/api/lawyers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            gender: 'Not Specified',
+            city,
+            position: 'District Court',
+            specialty,
+            exp,
+            fought: Math.max(5, exp * 4),
+            ongoing: Math.max(1, Math.round(exp / 2)),
+            fees: '₹1,500',
+            contactInfo: onboardingContactVal || enrolment,
+            avatarBase64: null
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to register advocate profile');
+        }
+
+        const result = await response.json();
+        const savedLawyer = result.lawyer;
+
+        // Prepend to lawyers database
+        LAWYERS_DATABASE.unshift(savedLawyer);
+
+        // Update state
+        state.userType = 'lawyer';
+        state.userProfile = savedLawyer;
+
+        // Update Status UI in header
+        const userRoleEl = document.querySelector('.user-role');
+        const statusTextEl = document.querySelector('.status-text');
+        const statusIndicator = document.querySelector('.status-indicator');
+        
+        userRoleEl.textContent = name;
+        statusTextEl.textContent = `${city} • Pending Verification`;
+        statusIndicator.className = 'status-indicator';
+        statusIndicator.style.backgroundColor = 'var(--text-muted)';
+        statusIndicator.style.boxShadow = 'none';
+
+        // Update avatar circle in header status card
+        const userStatusCard = document.getElementById('user-status');
+        let avatarCircle = userStatusCard.querySelector('.avatar-header-circle');
+        if (!avatarCircle) {
+          avatarCircle = document.createElement('div');
+          avatarCircle.className = 'avatar-header-circle';
+          avatarCircle.style.width = '32px';
+          avatarCircle.style.height = '32px';
+          avatarCircle.style.borderRadius = '50%';
+          avatarCircle.style.marginRight = '8px';
+          avatarCircle.style.overflow = 'hidden';
+          avatarCircle.style.background = 'linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo))';
+          avatarCircle.style.display = 'flex';
+          avatarCircle.style.alignItems = 'center';
+          avatarCircle.style.justify = 'center';
+          avatarCircle.style.color = 'white';
+          avatarCircle.style.fontSize = '10px';
+          avatarCircle.style.fontWeight = 'bold';
+          userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
+        }
+        avatarCircle.textContent = savedLawyer.avatarText;
+
+        // Reset forms and hide overlay
+        advocateSignupForm.reset();
+        verdictContainer.style.display = 'none';
+        onboardingOverlay.style.display = 'none';
+
+        // Update nav tabs for lawyer and redirect to caseload
+        updateNavForUserRole();
+        linkSwitchRole.style.display = 'inline-block';
+        switchTab('workspace');
+        submitBtn.disabled = false;
+      } catch (err) {
+        console.error('Error saving advocate profile:', err);
+        alert('Could not save advocate profile: ' + err.message);
+        submitBtn.disabled = false;
+      }
+
+    } catch (error) {
+      console.error(error);
+      verdictContainer.innerHTML = `<p style="color:var(--accent-rose); font-size:11px;">Verification check failed. Please check your inputs.</p>`;
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Claude Enrolment Consistency Sanity-Check
+  async function checkEnrolmentConsistencyWithClaude(name, stateCode, enrolment, exp) {
+    const apiKey = localStorage.getItem('ANTHROPIC_API_KEY') || '';
+    
+    if (apiKey) {
+      try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+            'dangerously-allow-browser': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 1000,
+            system: 'You are a bar credential sanity-checker. Check if the claimed years of experience align with the enrolment year extracted from the bar council number. Format is STATE_CODE/NUMBER/YEAR (e.g. MAH/1234/2015 implies enrolment in 2015). Current year is 2026. A lawyer cannot have more years of experience than the time elapsed since their enrolment. Return ONLY a JSON object: { "plausible": boolean, "note": "one short sentence explaining the alignment check" }.',
+            messages: [
+              {
+                role: 'user',
+                content: `Advocate Name: ${name}\nState Bar: ${stateCode}\nBar Enrolment: ${enrolment}\nClaimed Experience: ${exp} years`
+              }
+            ]
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const text = data.content[0].text;
+          return JSON.parse(text.trim());
+        }
+      } catch (e) {
+        console.error('Claude API enrolment check failed, falling back to local verification:', e);
+      }
+    }
+
+    // Mock local verification logic
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const parts = enrolment.split('/');
+    const enrolmentYear = parseInt(parts[2]);
+    const maxExp = 2026 - enrolmentYear;
+
+    if (exp <= maxExp && exp >= 0) {
+      return {
+        plausible: true,
+        note: `Verification pass: Enrolment year (${enrolmentYear}) aligns with claimed experience of ${exp} years (maximum possible is ${maxExp} years).`
+      };
+    } else {
+      return {
+        plausible: false,
+        note: `Conflict found: Enrolment year (${enrolmentYear}) does not support claimed experience of ${exp} years (only ${maxExp} years elapsed since enrolment).`
+      };
+    }
+  }
+
+  // Dynamic caseload state for Lawyer Dashboard
+  let caseloadClients = [
+    {
+      id: 'client-rahul-verma',
+      name: 'Rahul Verma',
+      issue: 'Tenant Security Deposit Dispute',
+      description: 'Landlord refusing to refund deposit of $1,500 claiming wear and tear. Lease ended June 1st.',
+      date: '2026-07-01',
+      mode: 'Online Consultation',
+      status: 'Pending Consultation',
+      docs: [
+        { name: 'LeaseAgreement.pdf', size: '1.2 MB', scanned: false }
+      ],
+      chat: [
+        { sender: 'client', text: 'Hello Advocate, I uploaded my lease agreement. Please let me know if we can file a small claims action.' },
+        { sender: 'system', text: 'Secured case space initialized under legal privilege.' }
+      ]
+    },
+    {
+      id: 'client-meera-nair',
+      name: 'Meera Nair',
+      issue: 'Unpaid Freelance Invoice Claim',
+      description: 'Client defaulted on payment of $2,400 for mobile app UI designs completed 3 months ago.',
+      date: '2026-07-03',
+      mode: 'Offline Meeting',
+      status: 'Active Review',
+      docs: [
+        { name: 'ServiceContract.pdf', size: '840 KB', scanned: false }
+      ],
+      chat: [
+        { sender: 'client', text: 'Advocate, they sent a cease and desist because I paused their production server. What are my rights?' },
+        { sender: 'lawyer', text: 'Under state contract code, you have a lien on your work products if unpaid. Let me review your contract clauses.' }
+      ]
+    }
+  ];
+
+  function updateNavForUserRole() {
+    const role = state.userType; // 'client' or 'lawyer'
+    const tabAnalyzer = document.getElementById('tab-btn-analyzer');
+    const tabMatchmaker = document.getElementById('tab-btn-matchmaker');
+    const tabWorkspace = document.getElementById('tab-btn-workspace');
+    const tabAcademy = document.getElementById('tab-btn-academy');
+
+    if (role === 'lawyer') {
+      if (tabAnalyzer) tabAnalyzer.style.display = 'none';
+      if (tabMatchmaker) tabMatchmaker.style.display = 'none';
+      if (tabWorkspace) {
+        tabWorkspace.innerHTML = `<i data-lucide="folder-git-2"></i> Client Caseload`;
+        tabWorkspace.style.display = 'flex';
+      }
+      if (tabAcademy) {
+        tabAcademy.innerHTML = `<i data-lucide="shield-alert"></i> Lawyer Toolkit`;
+        tabAcademy.style.display = 'flex';
+      }
+      document.getElementById('client-academy-view').style.display = 'none';
+      document.getElementById('lawyer-toolkit-view').style.display = 'block';
+      lucide.createIcons();
+
+      // Populate dropdowns in toolkit
+      const vSelect = document.getElementById('vakalatnama-client');
+      const hSelect = document.getElementById('hearing-client');
+      const bSelect = document.getElementById('bill-client');
+      if (vSelect && hSelect && bSelect) {
+        vSelect.innerHTML = '';
+        hSelect.innerHTML = '';
+        bSelect.innerHTML = '';
+        caseloadClients.forEach(c => {
+          const opt1 = document.createElement('option');
+          opt1.value = c.name;
+          opt1.textContent = `${c.name} (${c.issue})`;
+          vSelect.appendChild(opt1);
+
+          const opt2 = document.createElement('option');
+          opt2.value = c.name;
+          opt2.textContent = c.name;
+          hSelect.appendChild(opt2);
+
+          const opt3 = document.createElement('option');
+          opt3.value = c.id;
+          opt3.textContent = c.name;
+          bSelect.appendChild(opt3);
+        });
+      }
+      
+      // Update workspace layout for lawyer
+      document.getElementById('workspace-empty-container').style.display = 'none';
+      document.getElementById('workspace-active-container').style.display = 'none';
+      document.getElementById('lawyer-caseload-container').style.display = 'grid';
+      
+      renderLawyerCaseload();
+    } else {
+      // client
+      if (tabAnalyzer) tabAnalyzer.style.display = 'flex';
+      if (tabMatchmaker) tabMatchmaker.style.display = 'flex';
+      if (tabWorkspace) {
+        tabWorkspace.innerHTML = `<i data-lucide="folder-git-2"></i> Case Workspace`;
+        tabWorkspace.style.display = 'flex';
+      }
+      if (tabAcademy) {
+        tabAcademy.innerHTML = `<i data-lucide="book-open"></i> Know Your Rights`;
+        tabAcademy.style.display = 'flex';
+      }
+      document.getElementById('client-academy-view').style.display = 'block';
+      document.getElementById('lawyer-toolkit-view').style.display = 'none';
+      lucide.createIcons();
+
+      // Update workspace layout for client
+      document.getElementById('lawyer-caseload-container').style.display = 'none';
+      if (state.activeConsultation) {
+        document.getElementById('workspace-empty-container').style.display = 'none';
+        document.getElementById('workspace-active-container').style.display = 'grid';
+      } else {
+        document.getElementById('workspace-empty-container').style.display = 'block';
+        document.getElementById('workspace-active-container').style.display = 'none';
+      }
+    }
+  }
+
+  function renderLawyerCaseload() {
+    const listContainer = document.getElementById('lawyer-client-list');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+
+    // Merge dynamic active consultations if matching this lawyer
+    const activeClientsList = [...caseloadClients];
+    if (state.activeConsultation) {
+      const matchExists = activeClientsList.some(c => c.id === 'client-current-user');
+      if (!matchExists) {
+        activeClientsList.unshift({
+          id: 'client-current-user',
+          name: 'You (Demo Client Booking)',
+          issue: state.activeConsultation.brief,
+          description: state.activeConsultation.brief,
+          date: state.activeConsultation.date,
+          mode: state.activeConsultation.mode,
+          status: 'New Inquiry',
+          docs: [
+            { name: 'LeaseAgreement.pdf', size: '1.2 MB', scanned: false }
+          ],
+          chat: [
+            { sender: 'client', text: `Hi, I booked you for: "${state.activeConsultation.brief}". Let's discuss.` }
+          ]
+        });
+      }
+    }
+
+    activeClientsList.forEach(client => {
+      const item = document.createElement('div');
+      item.className = 'glass-card client-item-card';
+      item.style.padding = '12px';
+      item.style.cursor = 'pointer';
+      item.style.border = '1px solid rgba(255,255,255,0.05)';
+      item.style.transition = 'all 0.2s ease';
+      item.style.marginBottom = '8px';
+      item.style.borderRadius = '0px'; // file folder look
+      
+      item.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <strong style="font-size:13px; color:white;">${client.name}</strong>
+          <span style="font-family:var(--font-mono); font-size:9px; background:rgba(255,255,255,0.04); padding:2px 6px; color:var(--text-secondary); border:1px solid rgba(255,255,255,0.06);">${client.status}</span>
+        </div>
+        <p style="font-size:11px; color:var(--text-secondary); margin:0 0 6px 0; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${client.issue}</p>
+        <div style="display:flex; align-items:center; gap:10px; font-size:10px; color:var(--text-muted); font-family:var(--font-mono);">
+          <span><i data-lucide="calendar" style="width:10px; height:10px; display:inline-block; vertical-align:middle; margin-right:2px;"></i> ${client.date}</span>
+          <span><i data-lucide="video" style="width:10px; height:10px; display:inline-block; vertical-align:middle; margin-right:2px;"></i> ${client.mode.split(' ')[0]}</span>
+        </div>
+      `;
+
+      item.addEventListener('click', () => {
+        // Highlight active item
+        document.querySelectorAll('.client-item-card').forEach(card => {
+          card.style.borderColor = 'rgba(255,255,255,0.05)';
+          card.style.background = 'transparent';
+        });
+        item.style.borderColor = 'var(--color-thread)';
+        item.style.background = 'rgba(178, 94, 56, 0.05)';
+        
+        loadActiveClientDetail(client);
+      });
+
+      listContainer.appendChild(item);
+    });
+    
+    lucide.createIcons();
+  }
+
+  function loadActiveClientDetail(client) {
+    const detailPanel = document.getElementById('lawyer-active-client-detail');
+    if (!detailPanel) return;
+    
+    // Render chat messages
+    let chatHTML = '';
+    client.chat.forEach(msg => {
+      const isLawyer = msg.sender === 'lawyer' || msg.sender === 'system';
+      const senderClass = isLawyer ? 'message-lawyer' : 'message-client';
+      const senderName = msg.sender === 'lawyer' ? 'You' : msg.sender === 'system' ? 'Aequitas System' : client.name;
+      
+      chatHTML += `
+        <div class="chat-message ${senderClass}">
+          <div class="message-meta">${senderName}</div>
+          <div class="message-bubble">${msg.text}</div>
+        </div>
+      `;
+    });
+
+    // Render documents list
+    let docsHTML = '';
+    client.docs.forEach((doc, idx) => {
+      docsHTML += `
+        <div class="doc-item" style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); margin-bottom:8px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <i data-lucide="file-text" style="color:var(--accent-indigo); width:16px; height:16px;"></i>
+            <div>
+              <div style="font-size:12px; color:white; font-weight:500;">${doc.name}</div>
+              <div style="font-size:10px; color:var(--text-muted);">${doc.size}</div>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-mini btn-scan-client-doc" data-client-id="${client.id}" data-doc-idx="${idx}" style="font-size:10px; padding:4px 10px;">
+            <i data-lucide="sparkles" style="width:12px; height:12px;"></i> Scan Clauses
+          </button>
+        </div>
+      `;
+    });
+
+    detailPanel.innerHTML = `
+      <div class="workspace-main-panel glass-card" style="display: grid; grid-template-rows: auto 1fr auto; height: 320px; padding: 0;">
+        
+        <!-- Header -->
+        <div style="padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="margin:0; font-size:14px; color:white;">Case: ${client.issue}</h3>
+            <span style="font-size:11px; color:var(--text-secondary);">Client: ${client.name} • ${client.mode}</span>
+          </div>
+          <div style="font-family:var(--font-mono); font-size:10px; background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.2); color:#10b981; padding:4px 8px;">
+            PRIVILEGED INQUIRY
+          </div>
+        </div>
+
+        <!-- Chat messages area -->
+        <div id="lawyer-client-chat-box" style="padding: 15px 20px; overflow-y: auto; display:flex; flex-direction:column; gap:12px; height: 180px;">
+          ${chatHTML}
+        </div>
+
+        <!-- Chat input area -->
+        <div style="padding: 10px 20px; border-top: 1px solid rgba(255,255,255,0.08);">
+          <form id="lawyer-chat-form" style="display:flex; gap:10px;">
+            <input type="text" id="lawyer-chat-input" placeholder="Type privilege-protected reply to client..." style="flex:1; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:8px 12px; color:white; font-size:12px;" required>
+            <button type="submit" class="btn btn-primary" style="padding:8px 16px; font-size:12px;">Send</button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Client Documents panel -->
+      <div class="glass-card" style="padding: 20px;">
+        <h4 style="margin:0 0 12px 0; font-size:13px; text-transform:uppercase; font-family:var(--font-mono); letter-spacing:0.05em; color:var(--text-secondary);">Client Documents Vault</h4>
+        <div id="lawyer-client-docs-list">
+          ${docsHTML}
+        </div>
+      </div>
+    `;
+
+    lucide.createIcons();
+
+    // Bind chat form submit
+    const chatForm = document.getElementById('lawyer-chat-form');
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('lawyer-chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Add to array
+      client.chat.push({ sender: 'lawyer', text: text });
+      
+      // Reload UI
+      loadActiveClientDetail(client);
+      
+      // Scroll to bottom
+      const box = document.getElementById('lawyer-client-chat-box');
+      box.scrollTop = box.scrollHeight;
+    });
+
+    // Bind scan documents button
+    const scanButtons = document.querySelectorAll('.btn-scan-client-doc');
+    scanButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const docIdx = parseInt(btn.getAttribute('data-doc-idx'));
+        openLawyerDocAuditModal(client.docs[docIdx].name);
+      });
+    });
+  }
+
+  function openLawyerDocAuditModal(docName) {
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.85)';
+    modal.style.backdropFilter = 'blur(8px)';
+    modal.style.zIndex = '9999';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justify = 'center';
+
+    modal.innerHTML = `
+      <div class="glass-card" style="width: 500px; padding: 24px; border: 1px solid var(--color-thread); position:relative; border-radius:0px;">
+        <button id="btn-close-lawyer-audit" style="position:absolute; right:15px; top:15px; background:transparent; border:none; color:var(--text-secondary); cursor:pointer;"><i data-lucide="x"></i></button>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+          <span class="pill-tag text-rose" style="margin:0;">3 Breaches Detected</span>
+          <h3 style="margin:0; font-size:16px; font-family:var(--font-serif);">${docName}</h3>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+          <div style="background:rgba(239, 68, 68, 0.05); border:1px dashed rgba(239, 68, 68, 0.3); padding:10px;">
+            <strong style="color:#ef4444; font-size:11px; font-family:var(--font-mono);">⚠️ LATE FEE CAP BREACH</strong>
+            <p style="font-size:11px; margin:4px 0 0 0; color:var(--text-secondary);">Clause 14 demands a $150 flat late fee. Local statutory caps limit late fees to 8% of monthly rent ($80 max).</p>
+          </div>
+          <div style="background:rgba(239, 68, 68, 0.05); border:1px dashed rgba(239, 68, 68, 0.3); padding:10px;">
+            <strong style="color:#ef4444; font-size:11px; font-family:var(--font-mono);">⚠️ UNLAWFUL ENTRY CLAUSE</strong>
+            <p style="font-size:11px; margin:4px 0 0 0; color:var(--text-secondary);">Clause 8 permits the landlord to enter premises at any time without notice. Standard law requires 24 hours written notice except in emergencies.</p>
+          </div>
+          <div style="background:rgba(239, 68, 68, 0.05); border:1px dashed rgba(239, 68, 68, 0.3); padding:10px;">
+            <strong style="color:#ef4444; font-size:11px; font-family:var(--font-mono);">⚠️ UTILITY SHUTOFF THREAT</strong>
+            <p style="font-size:11px; margin:4px 0 0 0; color:var(--text-secondary);">Clause 19 allows landlord utility shutoffs for non-payment. Self-help evictions are criminal offenses under local state tenant acts.</p>
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-full" id="btn-close-lawyer-audit-confirm" style="border-radius:0px;">Confirm & Close Report</button>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    lucide.createIcons();
+
+    const closeModal = () => modal.remove();
+    document.getElementById('btn-close-lawyer-audit').addEventListener('click', closeModal);
+    document.getElementById('btn-close-lawyer-audit-confirm').addEventListener('click', closeModal);
+  }
+
+  function initLawyerToolkit() {
+    // 1. Sidebar Tabs Toggling
+    const toolkitNavBtns = document.querySelectorAll('.toolkit-nav-btn');
+    const toolkitPanels = document.querySelectorAll('.toolkit-panel');
+
+    toolkitNavBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toolkitNavBtns.forEach(b => {
+          b.classList.remove('active');
+          b.style.background = 'transparent';
+          b.style.borderColor = 'transparent';
+          b.style.color = 'var(--text-secondary)';
+        });
+        
+        btn.classList.add('active');
+        btn.style.background = 'rgba(255,255,255,0.03)';
+        btn.style.borderColor = 'var(--color-thread)';
+        btn.style.color = 'var(--text-primary)';
+
+        const tool = btn.getAttribute('data-tool');
+        toolkitPanels.forEach(panel => {
+          panel.style.display = panel.id === `tool-panel-${tool}` ? 'block' : 'none';
+        });
+      });
+    });
+
+    // 2. Vakalatnama Builder
+    const vakalatnamaForm = document.getElementById('vakalatnama-form');
+    if (vakalatnamaForm) {
+      vakalatnamaForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const clientVal = document.getElementById('vakalatnama-client').value;
+        const courtVal = document.getElementById('vakalatnama-court').value;
+        const caseNumVal = document.getElementById('vakalatnama-case-num').value;
+        
+        // Update Preview
+        document.getElementById('preview-val-client-name').textContent = clientVal;
+        document.getElementById('preview-val-court').textContent = courtVal;
+        document.getElementById('preview-val-case').textContent = caseNumVal;
+        
+        const lawyerName = state.userProfile ? state.userProfile.name : 'Sarah Jenkins, Esq.';
+        const lawyerNameEls = document.querySelectorAll('.preview-val-lawyer-name');
+        lawyerNameEls.forEach(el => el.textContent = lawyerName);
+        
+        alert('Vakalatnama generated and signed successfully! Print view updated.');
+      });
+    }
+
+    const btnPrintVakalatnama = document.getElementById('btn-print-vakalatnama');
+    if (btnPrintVakalatnama) {
+      btnPrintVakalatnama.addEventListener('click', () => {
+        const previewContent = document.getElementById('vakalatnama-preview-box').innerHTML;
+        const win = window.open('', '', 'height=600,width=800');
+        win.document.write('<html><head><title>Vakalatnama</title>');
+        win.document.write('<style>body { font-family: Georgia, serif; padding: 40px; color: #111; line-height: 1.6; } .preview-val-lawyer-name { font-weight: bold; } button { display:none; }</style>');
+        win.document.write('</head><body>');
+        win.document.write(previewContent);
+        win.document.write('</body></html>');
+        win.document.close();
+        win.print();
+      });
+    }
+
+    // 3. Court Calendar
+    const hearingForm = document.getElementById('hearing-form');
+    const hearingsList = document.getElementById('calendar-hearings-list');
+    if (hearingForm) {
+      hearingForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const clientName = document.getElementById('hearing-client').value;
+        const court = document.getElementById('hearing-court').value;
+        const dateVal = document.getElementById('hearing-date').value;
+        const details = document.getElementById('hearing-details').value;
+
+        // Parse date for clean display
+        const dateObj = new Date(dateVal);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+        const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+        const hearingCard = document.createElement('div');
+        hearingCard.className = 'glass-card';
+        hearingCard.style.padding = '12px';
+        hearingCard.style.borderLeft = '3px solid var(--accent-indigo)';
+        hearingCard.style.background = 'rgba(255,255,255,0.01)';
+        hearingCard.innerHTML = `
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 4px;">
+            <span>${formattedDate} • ${formattedTime}</span>
+            <span class="pill-tag text-indigo" style="margin: 0; font-size: 8px;">Court Hearing</span>
+          </div>
+          <strong style="font-family: var(--font-serif);">${clientName} Matter</strong>
+          <p style="font-size: 11px; margin: 4px 0 0 0; color: var(--text-secondary);">${court} • ${details}</p>
+        `;
+
+        hearingsList.insertBefore(hearingCard, hearingsList.firstChild);
+        hearingForm.reset();
+        alert('Hearing date scheduled and added to Court Calendar!');
+      });
+    }
+
+    // 4. Escrow Billing & Chat Integration
+    const billingForm = document.getElementById('billing-form');
+    const invoicesList = document.getElementById('invoices-list');
+    if (billingForm) {
+      billingForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const clientKey = document.getElementById('bill-client').value;
+        const service = document.getElementById('bill-service').value;
+        const price = parseInt(document.getElementById('bill-price').value);
+        const desc = document.getElementById('bill-desc').value;
+
+        const clientName = clientKey === 'client-rahul-verma' ? 'Rahul Verma' : (clientKey === 'client-meera-nair' ? 'Meera Nair' : 'Client');
+
+        // Add to recent invoices list
+        const invoiceCard = document.createElement('div');
+        invoiceCard.className = 'glass-card';
+        invoiceCard.style.padding = '12px';
+        invoiceCard.style.borderLeft = '3px solid var(--accent-rose)';
+        invoiceCard.style.background = 'rgba(255,255,255,0.01)';
+        invoiceCard.style.display = 'flex';
+        invoiceCard.style.justify = 'space-between';
+        invoiceCard.style.alignItems = 'center';
+        invoiceCard.innerHTML = `
+          <div>
+            <strong style="font-family: var(--font-serif); font-size:12px;">${service} (${clientName})</strong>
+            <p style="font-size: 10px; margin: 2px 0 0 0; color: var(--text-muted);">${desc}</p>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-family: var(--font-mono); font-weight: bold; color: var(--accent-rose);">₹${price.toLocaleString('en-IN')}</div>
+            <span class="pill-tag text-rose" style="font-size: 8px; margin: 2px 0 0 0; padding: 1px 4px;">Pending</span>
+          </div>
+        `;
+
+        invoicesList.insertBefore(invoiceCard, invoicesList.firstChild);
+
+        // Find client record in memory and push chat message
+        const matchedClient = caseloadClients.find(c => c.id === clientKey || c.name === clientKey);
+
+        if (matchedClient) {
+          matchedClient.chat.push({
+            sender: 'lawyer',
+            text: `📢 Escrow Payment Request Issued:\n₹${price.toLocaleString('en-IN')} for "${service}".\nDescription: ${desc}\n\nPlease click to deposit the funds safely in Aequitas Escrow.`
+          });
+          // If this client is active client, reload the chat box
+          if (state.userType === 'lawyer' && activeClient && activeClient.id === matchedClient.id) {
+            loadActiveClientDetail(matchedClient);
+          }
+        }
+
+        billingForm.reset();
+        alert(`Invoice dispatched successfully to ${clientName}! Chat history has been updated.`);
+      });
+    }
+
+    // 5. Precedents & Drafts
+    const draftTemplates = [
+      {
+        title: "Section 138 NI Act - Demand Notice for Cheque Bounce",
+        text: `LEGAL NOTICE BY REGISTERED AD / SPEED POST
+
+To,
+[Client Opponent Name / Debtor Name]
+[Opponent Full Address]
+
+Dear Sir/Madam,
+
+Under instructions from my client, Shri [Client Full Name], residing at [Client Address], I hereby serve you with this Legal Notice under Section 138 of the Negotiable Instruments Act, 1881:
+
+1. That you issued a Cheque No. [Cheque Number] dated [Date] drawn on [Bank Name] for an amount of Rs. [Amount in Figures] (Rupees [Amount in Words] Only) towards discharge of your legal liability.
+2. That my client presented the said cheque which was returned unpaid by the bank with the endorsement "Funds Insufficient" on [Bounce Date].
+3. I hereby call upon you to make payment of the said amount of Rs. [Amount] within fifteen (15) days of receipt of this notice, failing which my client shall initiate criminal prosecution.
+
+Advocate [Lawyer Name]`,
+        precedents: `<li><strong>K. Bhaskaran v. Sankaran Vaidhyan Balan (1999)</strong>: Establishes that the notice is deemed served once sent by post to the correct address, even if returned.</li>
+<li><strong>MSR Leathers v. S. Palaniappan (2013)</strong>: A cheque bounce notice can be sent multiple times if the cheque is represented.</li>`
+      },
+      {
+        title: "Section 106 TP Act - Notice for Termination of Tenancy",
+        text: `LEGAL NOTICE FOR TERMINATION OF LEASE
+
+To,
+[Tenant Name]
+[Address of Leased Premises]
+
+Dear Sir/Madam,
+
+Under instructions from my client, [Landlord Name], owner of the property located at [Address], I hereby serve you with this Notice under Section 106 of the Transfer of Property Act, 1882:
+
+1. That you entered into a lease agreement dated [Lease Date] in respect of the property at [Address] for monthly rent of Rs. [Rent Amount].
+2. That my client hereby terminates your tenancy in respect of the said premises upon the expiry of fifteen (15) days from receipt of this notice.
+3. I hereby call upon you to quit, vacate and deliver quiet and vacant possession of the premises to my client on or before [Vacation Date], failing which my client will file an eviction suit.
+
+Advocate [Lawyer Name]`,
+        precedents: `<li><strong>Nopany Investments (P) Ltd. v. Santokh Singh (HUF) (2008)</strong>: A notice under Sec 106 is valid even if a monthly tenancy is terminated without proving defaults, as long as 15 days' notice is given.</li>
+<li><strong>State of UP v. Zahoor Ahmad (1973)</strong>: Strict compliance of notice delivery is mandatory to secure an eviction order.</li>`
+      },
+      {
+        title: "Application for Interim Injunction & Stay Order",
+        text: `IN THE COURT OF THE CIVIL JUDGE, SENIOR DIVISION, MUMBAI
+I.A. NO. ___ OF 2026 IN CIVIL SUIT NO. ___ OF 2026
+
+IN THE MATTER OF:
+[Client Name]   ...Plaintiff
+v.
+[Opponent Name]   ...Defendant
+
+APPLICATION UNDER ORDER 39 RULES 1 & 2 OF CPC FOR INTERIM INJUNCTION
+
+The Plaintiff above-named states as follows:
+1. The Plaintiff has filed the accompanying suit for Permanent Injunction and Declaration against the Defendant, which is pending before this Court.
+2. The Defendant is attempting to unlawfully evict the Plaintiff from the suit premises without following due process of law.
+3. If the Defendant is not restrained by an ad-interim injunction, the Plaintiff will suffer irreparable loss and injury which cannot be compensated in money.
+
+PRAYER:
+It is therefore prayed that this Court be pleased to grant an ad-interim temporary injunction restraining the Defendant from evicting the Plaintiff or creating any third-party rights in the suit property until final disposal of the suit.
+
+Advocate for Plaintiff`,
+        precedents: `<li><strong>Gujarat Bottling Co. Ltd. v. Coca Cola Co. (1995)</strong>: Lays down the three pillars for injunction grants: prima facie case, balance of convenience, and irreparable injury.</li>
+<li><strong>Morgan Stanley Mutual Fund v. Kartick Das (1994)</strong>: Guidelines for grant of ex-parte ad-interim injunctions.</li>`
+      }
+    ];
+
+    const draftBtns = document.querySelectorAll('.toolkit-draft-btn');
+    const editor = document.getElementById('draft-text-editor');
+    const selectedTitle = document.getElementById('selected-draft-title');
+    const precedentsList = document.querySelector('#tool-panel-drafts ul');
+
+    draftBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        draftBtns.forEach(b => {
+          b.classList.remove('active');
+          b.style.background = 'transparent';
+          b.style.borderColor = 'transparent';
+          b.style.color = 'var(--text-secondary)';
+        });
+        
+        btn.classList.add('active');
+        btn.style.background = 'rgba(255,255,255,0.03)';
+        btn.style.borderColor = 'var(--color-thread)';
+        btn.style.color = 'white';
+
+        const idx = parseInt(btn.getAttribute('data-draft-idx'));
+        const template = draftTemplates[idx];
+        
+        selectedTitle.textContent = template.title;
+        editor.value = template.text.replace('[Lawyer Name]', state.userProfile ? state.userProfile.name : 'Sarah Jenkins, Esq.');
+        precedentsList.innerHTML = template.precedents;
+      });
+    });
+
+    const btnCopyDraft = document.getElementById('btn-copy-draft');
+    if (btnCopyDraft) {
+      btnCopyDraft.addEventListener('click', () => {
+        editor.select();
+        document.execCommand('copy');
+        alert('Draft notice copied to clipboard!');
+      });
+    }
+
+    const draftSearchInput = document.getElementById('draft-search-input');
+    if (draftSearchInput) {
+      draftSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        draftBtns.forEach(btn => {
+          const text = btn.textContent.toLowerCase();
+          btn.style.display = text.includes(query) ? 'block' : 'none';
+        });
+      });
+    }
+  }
+
+  // Fetch existing lawyers from the database and populate the list
+  async function fetchLawyersFromDatabase() {
+    try {
+      const response = await fetch(`${API_BASE}/api/lawyers`);
+      if (response.ok) {
+        const dbLawyers = await response.json();
+        if (dbLawyers && dbLawyers.length > 0) {
+          // Merge with static seeds, ensuring no duplicates by ID
+          dbLawyers.forEach(lawyer => {
+            const index = LAWYERS_DATABASE.findIndex(l => l.id === lawyer.id);
+            if (index !== -1) {
+              LAWYERS_DATABASE[index] = lawyer;
+            } else {
+              LAWYERS_DATABASE.unshift(lawyer);
+            }
+          });
+          // Re-render UI list
+          renderLawyers();
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch lawyers from database:", error);
+    }
+  }
+
+  // Pre-load default lawyers & set initial navigation
   renderLawyers();
+  updateNavForUserRole();
+  initLawyerToolkit();
+  fetchLawyersFromDatabase();
 });
