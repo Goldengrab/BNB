@@ -7,9 +7,15 @@ document.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
 
   // Dynamic API Base URL to allow client-side preview on other servers (e.g. Live Server on port 5500) while communicating with backend on port 3000
+  // Set this to your deployed cloud backend URL in production (e.g. 'https://aequitas-backend.onrender.com')
+  const PRODUCTION_BACKEND_URL = ''; 
+
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const API_BASE = window.location.port === '3000' 
     ? '' 
-    : (window.location.hostname ? `${window.location.protocol}//${window.location.hostname}:3000` : 'http://localhost:3000');
+    : (isLocalhost 
+        ? `${window.location.protocol}//${window.location.hostname}:3000` 
+        : (PRODUCTION_BACKEND_URL || 'http://localhost:3000'));
 
   // ==================== STATE MANAGEMENT ====================
   const state = {
