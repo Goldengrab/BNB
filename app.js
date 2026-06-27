@@ -3726,4 +3726,58 @@ Advocate for Plaintiff`,
       document.getElementById('settings-client-interest').value = state.userProfile.interest || 'Tenant Disputes';
     }
   }
+
+  // ==================== ACADEMY MODAL LOGIC ====================
+  const academyModal = document.getElementById('academy-modal');
+  const btnCloseAcademyModal = document.getElementById('btn-close-academy-modal');
+  const btnAcademyUnderstood = document.getElementById('btn-academy-understood');
+  const academyModalTitle = document.getElementById('academy-modal-title');
+  const academyModalContent = document.getElementById('academy-modal-content');
+  
+  const academyMockContent = {
+    'deposit': { title: 'Security Deposit Recovery', content: '<p>Under the Rent Control Act and general tenancy agreements, a landlord is required to return the security deposit within 30 days of you vacating the premises, minus any legitimate deductions for unpaid rent or major damages.</p><p><b>Steps to take:</b><ol><li>Review your lease agreement.</li><li>Send a formal written notice or email requesting the return.</li><li>If ignored, you may send a legal notice or approach a small claims or rent controller court.</li></ol></p>' },
+    'repairs': { title: 'Landlord Refusing Repairs?', content: '<p>The landlord has a statutory duty to keep the premises in a habitable condition. This includes structural repairs, plumbing, and electrical faults.</p><p>If they refuse, you generally have the right to carry out minor repairs yourself and deduct the cost from the rent, provided you have given 14-30 days written notice and kept all receipts. Major structural issues may require approaching the local rent controller.</p>' },
+    'eviction': { title: 'Illegal Lockouts & Eviction', content: '<p>A landlord <b>cannot</b> forcefully evict you, change locks, or cut off essential supplies (water/electricity) without a court order.</p><p>If you face an illegal lockout, immediately call the local police station and file an FIR for criminal trespass and illegal dispossession. You can also file a suit for injunction in the civil court to restore possession.</p>' },
+    'wage': { title: 'Recovering Unpaid Invoices', content: '<p>As a freelancer, you operate as an independent contractor. Unpaid invoices are considered a breach of contract.</p><p><b>Steps:</b><br>1. Send a formal demand letter.<br>2. If they are a registered MSME, you can file a complaint with the MSME Samadhaan portal for delayed payments (which includes interest).<br>3. File a civil suit for recovery of money.</p>' },
+    'contract': { title: 'Employee vs Contractor', content: '<p>Misclassifying an employee as an independent contractor is a common tactic to avoid paying benefits (PF, Gratuity, Health Insurance).<br><br>The primary test is the "Control Test": If the company controls your working hours, provides equipment, and dictates exactly <i>how</i> you do your work, you are legally likely an employee regardless of what the contract says.</p>' },
+    'overtime': { title: 'Overtime Claims', content: '<p>Under the Factories Act and various State Shops & Establishments Acts, working beyond standard hours (usually 8-9 hours a day or 48 hours a week) entitles you to overtime pay, typically at twice the ordinary rate of wages.</p><p>Keep a strict log of your hours. If denied, you can file a claim with the local Labour Commissioner.</p>' },
+    'lemon': { title: 'Used Car & Lemon Law', content: '<p>India does not have a specific "Lemon Law," but consumers are protected under the Consumer Protection Act against unfair trade practices and defective goods.</p><p>If a dealer sold you a defective vehicle while hiding material facts, you can file a complaint in the District Consumer Disputes Redressal Commission seeking a replacement, refund, or damages.</p>' },
+    'subscription': { title: 'Subscription Traps', content: '<p>Auto-renewing subscriptions that are deliberately difficult to cancel violate RBI guidelines on recurring payments and Consumer Protection rules against unfair contracts.</p><p>You can revoke the e-mandate directly through your bank or UPI app. If the company continues to bill you or refuses to refund an unauthorized charge, you can initiate a chargeback.</p>' },
+    'chargeback': { title: 'Credit Card Chargebacks', content: '<p>A chargeback is a dispute resolution mechanism provided by credit card networks (Visa/Mastercard). If you paid for a service/good that was not delivered, or was misrepresented, you can ask your bank to reverse the charge.</p><p>You must file this within 90-120 days of the transaction. The bank will investigate and may temporarily credit your account during the dispute.</p>' },
+    'smallclaims': { title: 'Small Claims Court', content: '<p>While India doesn\'t have formal "Small Claims Courts," you can use the Lok Adalat system, Gram Nyayalayas, or file a summary suit under Order 37 of the CPC for speedy recovery of money (based on written contracts, bills, or cheques).</p><p>These fast-track courts minimize procedural delays and often do not require a lawyer.</p>' },
+    'mediation': { title: 'What Happens in Mediation?', content: '<p>Mediation is a voluntary, confidential process where a neutral third party helps you and the other side negotiate a settlement. The mediator does not act as a judge and cannot force a decision.</p><p>If an agreement is reached, it is put in writing and signed, making it legally binding. If mediation fails, you can still proceed to court.</p>' },
+    'lawyer-fees': { title: 'How Legal Fees Work', content: '<p><b>Hourly Rate:</b> You pay for the exact time the lawyer spends on your case.<br><b>Flat Fee:</b> A set price for a specific service (e.g., drafting a will).<br><b>Retainer:</b> An upfront deposit that the lawyer bills against hourly.<br><b>Contingency:</b> (Note: Strictly speaking, contingency fees where lawyers take a % of the winnings are illegal in India under BCI rules, though alternative success-based structures are sometimes used informally).</p>' }
+  };
+
+  const academyLinks = document.querySelectorAll('.academy-link');
+  academyLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const scenario = link.getAttribute('data-scenario');
+      const data = academyMockContent[scenario];
+      if (data) {
+        academyModalTitle.textContent = data.title;
+        academyModalContent.innerHTML = data.content;
+      } else {
+        academyModalTitle.textContent = 'Legal Guide';
+        academyModalContent.innerHTML = '<p>Detailed information for this scenario is currently being updated. Please consult a qualified advocate for specific advice.</p>';
+      }
+      academyModal.style.display = 'flex';
+      lucide.createIcons();
+    });
+  });
+
+  const closeAcademyModal = () => {
+    if (academyModal) academyModal.style.display = 'none';
+  };
+
+  if (btnCloseAcademyModal) btnCloseAcademyModal.addEventListener('click', closeAcademyModal);
+  if (btnAcademyUnderstood) btnAcademyUnderstood.addEventListener('click', closeAcademyModal);
+  
+  if (academyModal) {
+    academyModal.addEventListener('click', (e) => {
+      if (e.target === academyModal) closeAcademyModal();
+    });
+  }
+
 });
