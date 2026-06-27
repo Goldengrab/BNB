@@ -3615,7 +3615,7 @@ Advocate for Plaintiff`,
         window.checkDigiLockerLock();
       } catch (err) {
         console.error('DigiLocker error:', err);
-        alert('Verification failed. Please try again.');
+        alert(err.message || 'Verification failed. Please try again.');
       } finally {
         btnDigilockerVerify.disabled = false;
         btnDigilockerVerify.innerHTML = '<i data-lucide="check-circle" style="width:20px; height:20px;"></i> Verify via DigiLocker';

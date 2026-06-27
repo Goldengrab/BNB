@@ -3,8 +3,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const url = process.env.DATABASE_URL || "file:aequitas.db";
-const authToken = process.env.DATABASE_AUTH_TOKEN;
+const url = (process.env.DATABASE_URL || "file:aequitas.db").trim();
+const authToken = process.env.DATABASE_AUTH_TOKEN ? process.env.DATABASE_AUTH_TOKEN.trim() : undefined;
 
 export const db = createClient({
   url,
