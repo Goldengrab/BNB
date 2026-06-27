@@ -1,0 +1,5 @@
+{
+    "antigravity.models.provider": "custom",
+    "antigravity.models.custom.apiKey": "AQ.Ab8RN6JrTLXlKD6RUXhgzNt6ee8tRq9MJ1031udYdW75yRQTGQ",
+    "antigravity.models.custom.baseUrl": "https://generativelanguage.googleapis.com/v1beta"
+}
