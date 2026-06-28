@@ -1096,20 +1096,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==================== MOCK DATABASES ====================
   let LAWYERS_DATABASE = [
     {
-      id: 'sarah-jenkins',
-      name: 'Sarah Jenkins, Esq.',
+      id: 'neha-sharma',
+      name: 'Neha Sharma, Esq.',
       specialty: 'tenancy',
       specialtyLabel: 'Tenancy & Housing Law',
-      avatarText: 'SJ',
+      avatarText: 'NS',
       rating: '4.9',
       casesHandled: 42,
       ongoingCases: 4,
-      bio: 'Former Housing Authority Counsel. Dedicated to representing tenants against predatory landlords, security deposit withholding, and illegal lockouts.',
-      barNumber: 'CA #582910',
+      bio: 'Former RERA Counsel. Dedicated to representing tenants against predatory landlords, security deposit withholding, and illegal lockouts.',
+      barNumber: 'MAH/123/2012',
       contactInfo: 'sarah@lawyer.com',
       packages: [
         { name: 'Demand Letter & Review', price: '₹1,500', desc: 'Drafting formal notice to landlord and reviewing response.' },
-        { name: 'Small Claims Prep', price: '₹4,500', desc: 'Full evidence compilation, witness sheets, and courtroom rehearsal.' },
+        { name: 'District Court Prep', price: '₹4,500', desc: 'Full evidence compilation, witness sheets, and courtroom rehearsal.' },
         { name: 'Full Litigation Retainer', price: '₹18,000', desc: 'Comprehensive court representation and mediation filings.' }
       ],
       verified_cases: [
@@ -1120,20 +1120,20 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     },
     {
-      id: 'marcus-vance',
-      name: 'Marcus Vance',
+      id: 'rajesh-kumar',
+      name: 'Rajesh Kumar',
       specialty: 'employment',
       specialtyLabel: 'Employment & Labor Law',
-      avatarText: 'MV',
+      avatarText: 'RK',
       rating: '4.8',
       casesHandled: 67,
       ongoingCases: 6,
       bio: 'Fierce advocate for freelance designers, contractors, and employees facing unpaid wages, wage theft, misclassification, and overtime violations.',
-      barNumber: 'NY #392815',
+      barNumber: 'DEL/456/2015',
       contactInfo: 'marcus@lawyer.com',
       packages: [
         { name: 'Freelancer Invoice Recovery', price: '₹2,500', desc: 'Official breach of contract letter and settlement negotiations.' },
-        { name: 'Labor Board Filing Support', price: '₹6,000', desc: 'Drafting state labor agency claims and evidence audit.' },
+        { name: 'Labor Board Filing Support', price: '₹6,000', desc: 'Drafting Labour Court claims and evidence audit.' },
         { name: 'Employment Suit Representation', price: 'Contingency', desc: 'No upfront fee. 30% of recovered settlement.' }
       ],
       verified_cases: [
@@ -1144,16 +1144,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     },
     {
-      id: 'elena-rostova',
-      name: 'Elena Rostova',
+      id: 'priya-desai',
+      name: 'Priya Desai',
       specialty: 'contract',
       specialtyLabel: 'Contracts & Freelance',
-      avatarText: 'ER',
+      avatarText: 'PD',
       rating: '4.9',
       casesHandled: 84,
       ongoingCases: 8,
       bio: 'Specializes in tech freelance agreements, IP transfers, non-compete clauses, and drafting robust service agreements to prevent litigation.',
-      barNumber: 'TX #482910',
+      barNumber: 'GUJ/789/2018',
       contactInfo: 'elena@lawyer.com',
       packages: [
         { name: 'Contract Revision Audit', price: '₹2,000', desc: 'Line-by-line contract review and markup with redlines.' },
@@ -1167,20 +1167,20 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     },
     {
-      id: 'david-kim',
-      name: 'David Kim',
+      id: 'amit-patel',
+      name: 'Amit Patel',
       specialty: 'consumer',
       specialtyLabel: 'Consumer Protection',
-      avatarText: 'DK',
+      avatarText: 'AP',
       rating: '4.7',
       casesHandled: 53,
       ongoingCases: 5,
       bio: 'Helping buyers challenge dishonest dealerships, defective appliances (lemon laws), hidden billing subscriptions, and credit reporting errors.',
-      barNumber: 'IL #928374',
+      barNumber: 'KAR/234/2014',
       contactInfo: 'david@lawyer.com',
       packages: [
         { name: 'Dealer Demand Notice', price: '₹2,200', desc: 'Official letter detailing Lemon Law codes and replacement demand.' },
-        { name: 'Arbitration Filing Pack', price: '₹5,000', desc: 'Drafting files and evidence binders for consumer arbitration boards.' },
+        { name: 'Consumer Forum Filing Pack', price: '₹5,000', desc: 'Drafting files and evidence binders for consumer arbitration boards.' },
         { name: 'Court Action Retainer', price: '₹12,000', desc: 'Filing state civil action against manufacturer or dealer.' }
       ],
       verified_cases: [
@@ -1200,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', () => {
       casesHandled: 31,
       ongoingCases: 3,
       bio: 'Passionate about housing access. Specializes in habitability issues (mold, water leaks), retaliatory rent hikes, and local rent control disputes.',
-      barNumber: 'CA #619384',
+      barNumber: 'MAH/567/2016',
       contactInfo: 'samira@lawyer.com',
       packages: [
         { name: 'Notice of Violation Draft', price: '₹1,800', desc: 'Official notice demanding repairs with code inspector cites.' },
@@ -1214,16 +1214,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     },
     {
-      id: 'robert-vance',
-      name: 'Robert Vance, Esq.',
+      id: 'vikram-singh',
+      name: 'Vikram Singh, Esq.',
       specialty: 'criminal',
       specialtyLabel: 'Criminal Defense',
-      avatarText: 'RV',
+      avatarText: 'VS',
       rating: '4.8',
       casesHandled: 92,
       ongoingCases: 9,
       bio: 'Providing aggressive representation for criminal defense. Specialized in theft, traffic violations, misdemeanors, and civil rights disputes.',
-      barNumber: 'CA #928310',
+      barNumber: 'UP/890/2010',
       contactInfo: 'robert@lawyer.com',
       packages: [
         { name: 'Arrest & Bail consultation', price: '₹3,000', desc: 'Urgent consultation on legal rights and bail structure.' },
@@ -1246,7 +1246,7 @@ document.addEventListener('DOMContentLoaded', () => {
       casesHandled: 58,
       ongoingCases: 5,
       bio: 'Compassionate family law attorney. Focused on mutual consent divorce, child custody rights, alimony audits, and marital property settlements.',
-      barNumber: 'NY #618290',
+      barNumber: 'DEL/112/2017',
       contactInfo: 'priya@lawyer.com',
       packages: [
         { name: 'Divorce Mediation Consultation', price: '₹2,500', desc: 'Review of mediation steps, asset splits, and child custody rules.' },
@@ -2452,7 +2452,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Quickstart Demo Workspace
   btnWorkspaceQuickstart.addEventListener('click', () => {
-    // Select Sarah Jenkins and Tenancy package
+    // Select Neha Sharma and Tenancy package
     state.selectedLawyer = LAWYERS_DATABASE[0];
     const mockFormSubmitEvent = new Event('submit');
 
@@ -2462,8 +2462,8 @@ document.addEventListener('DOMContentLoaded', () => {
     state.workspaceData.caseCategory = 'tenancy';
     state.workspaceData.caseTitle = 'Security Deposit Recovery Dispute';
     state.workspaceData.pricing = {
-      name: 'Small Claims Prep',
-      price: '$450',
+      name: 'District Court Prep',
+      price: '₹45,000',
       desc: 'Full evidence compilation, witness sheets, and courtroom rehearsal.'
     };
 
@@ -2489,10 +2489,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Populate Sidebar values
     wsLawyerAvatar.textContent = 'SJ';
-    wsLawyerName.textContent = 'Sarah Jenkins, Esq.';
+    wsLawyerName.textContent = 'Neha Sharma, Esq.';
     wsLawyerRole.textContent = 'Tenancy Specialist';
-    wsPricingTag.textContent = 'Small Claims Prep';
-    wsPricingPrice.textContent = '$450';
+    wsPricingTag.textContent = 'District Court Prep';
+    wsPricingPrice.textContent = '₹45,000';
     wsPricingDesc.textContent = 'Full evidence compilation, witness sheets, and courtroom rehearsal.';
 
     // Reset Chat Messages
@@ -3398,7 +3398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'client-rahul-verma',
       name: 'Rahul Verma',
       issue: 'Tenant Security Deposit Dispute',
-      description: 'Landlord refusing to refund deposit of $1,500 claiming wear and tear. Lease ended June 1st.',
+      description: 'Landlord refusing to refund deposit of ₹1,50,000 claiming wear and tear. Lease ended June 1st.',
       date: '2026-07-01',
       mode: 'Online Consultation',
       status: 'Pending Consultation',
@@ -3414,7 +3414,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'client-meera-nair',
       name: 'Meera Nair',
       issue: 'Unpaid Freelance Invoice Claim',
-      description: 'Client defaulted on payment of $2,400 for mobile app UI designs completed 3 months ago.',
+      description: 'Client defaulted on payment of ₹2,40,000 for mobile app UI designs completed 3 months ago.',
       date: '2026-07-03',
       mode: 'Offline Meeting',
       status: 'Active Review',
@@ -3511,7 +3511,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chat: matchingCaseload.chat
           };
           state.isWorkspaceInitialized = true;
-          state.workspaceData.lawyer = LAWYERS_DATABASE[0]; // Sarah Jenkins
+          state.workspaceData.lawyer = LAWYERS_DATABASE[0]; // Neha Sharma
           state.workspaceData.caseCategory = 'tenancy';
           state.workspaceData.caseTitle = matchingCaseload.issue;
           state.workspaceData.pricing = {
@@ -3540,7 +3540,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Set sidebar values
           wsLawyerAvatar.textContent = 'SJ';
-          wsLawyerName.textContent = 'Sarah Jenkins, Esq.';
+          wsLawyerName.textContent = 'Neha Sharma, Esq.';
           wsLawyerRole.textContent = 'Tenancy Specialist';
           wsPricingTag.textContent = 'Consultation & Review';
           wsPricingPrice.textContent = '₹1,500';
@@ -3785,7 +3785,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
           <div style="background:rgba(239, 68, 68, 0.05); border:1px dashed rgba(239, 68, 68, 0.3); padding:10px;">
             <strong style="color:#ef4444; font-size:11px; font-family:var(--font-mono);">⚠️ LATE FEE CAP BREACH</strong>
-            <p style="font-size:11px; margin:4px 0 0 0; color:var(--text-secondary);">Clause 14 demands a $150 flat late fee. Local statutory caps limit late fees to 8% of monthly rent ($80 max).</p>
+            <p style="font-size:11px; margin:4px 0 0 0; color:var(--text-secondary);">Clause 14 demands a ₹15,000 flat late fee. Local statutory caps limit late fees to 8% of monthly rent (₹8,000 max).</p>
           </div>
           <div style="background:rgba(239, 68, 68, 0.05); border:1px dashed rgba(239, 68, 68, 0.3); padding:10px;">
             <strong style="color:#ef4444; font-size:11px; font-family:var(--font-mono);">⚠️ UNLAWFUL ENTRY CLAUSE</strong>
@@ -3849,7 +3849,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('preview-val-court').textContent = courtVal;
         document.getElementById('preview-val-case').textContent = caseNumVal;
 
-        const lawyerName = state.userProfile ? state.userProfile.name : 'Sarah Jenkins, Esq.';
+        const lawyerName = state.userProfile ? state.userProfile.name : 'Neha Sharma, Esq.';
         const lawyerNameEls = document.querySelectorAll('.preview-val-lawyer-name');
         lawyerNameEls.forEach(el => el.textContent = lawyerName);
 
@@ -4053,7 +4053,7 @@ Advocate for Plaintiff`,
         const template = draftTemplates[idx];
 
         selectedTitle.textContent = template.title;
-        editor.value = template.text.replace('[Lawyer Name]', state.userProfile ? state.userProfile.name : 'Sarah Jenkins, Esq.');
+        editor.value = template.text.replace('[Lawyer Name]', state.userProfile ? state.userProfile.name : 'Neha Sharma, Esq.');
         precedentsList.innerHTML = template.precedents;
       });
     });

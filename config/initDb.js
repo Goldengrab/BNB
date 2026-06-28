@@ -2,20 +2,20 @@ import db from "./db.js";
 
 const LAWYERS_SEED = [
   {
-    id: 'sarah-jenkins',
-    name: 'Sarah Jenkins, Esq.',
+    id: 'neha-sharma',
+    name: 'Neha Sharma, Esq.',
     specialty: 'tenancy',
     specialtyLabel: 'Tenancy & Housing Law',
-    avatarText: 'SJ',
+    avatarText: 'NS',
     rating: '4.9',
     casesHandled: 42,
     winRate: '93%',
-    bio: 'Former Housing Authority Counsel. Dedicated to representing tenants against predatory landlords, security deposit withholding, and illegal lockouts.',
-    barNumber: 'CA #582910',
+    bio: 'Former RERA Counsel. Dedicated to representing tenants against predatory landlords, security deposit withholding, and illegal lockouts.',
+    barNumber: 'MAH/123/2012',
     packages: [
-      { name: 'Demand Letter & Review', price: '$150', desc: 'Drafting formal notice to landlord and reviewing response.' },
-      { name: 'Small Claims Prep', price: '$450', desc: 'Full evidence compilation, witness sheets, and courtroom rehearsal.' },
-      { name: 'Full Litigation Retainer', price: '$1,800', desc: 'Comprehensive court representation and mediation filings.' }
+      { name: 'Demand Letter & Review', price: '₹15,000', desc: 'Drafting formal notice to landlord and reviewing response.' },
+      { name: 'District Court Prep', price: '₹45,000', desc: 'Full evidence compilation, witness sheets, and courtroom rehearsal.' },
+      { name: 'Full Litigation Retainer', price: '₹1,80,000', desc: 'Comprehensive court representation and mediation filings.' }
     ],
     verified_cases: [
       { case_type: "Security Deposit Recovery Claim", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
@@ -25,19 +25,19 @@ const LAWYERS_SEED = [
     ]
   },
   {
-    id: 'marcus-vance',
-    name: 'Marcus Vance',
+    id: 'rajesh-kumar',
+    name: 'Rajesh Kumar',
     specialty: 'employment',
     specialtyLabel: 'Employment & Labor Law',
-    avatarText: 'MV',
+    avatarText: 'RK',
     rating: '4.8',
     casesHandled: 67,
     winRate: '91%',
     bio: 'Fierce advocate for freelance designers, contractors, and employees facing unpaid wages, wage theft, misclassification, and overtime violations.',
-    barNumber: 'NY #392815',
+    barNumber: 'DEL/456/2015',
     packages: [
-      { name: 'Freelancer Invoice Recovery', price: '$250', desc: 'Official breach of contract letter and settlement negotiations.' },
-      { name: 'Labor Board Filing Support', price: '$600', desc: 'Drafting state labor agency claims and evidence audit.' },
+      { name: 'Freelancer Invoice Recovery', price: '₹25,000', desc: 'Official breach of contract letter and settlement negotiations.' },
+      { name: 'Labor Board Filing Support', price: '₹60,000', desc: 'Drafting Labour Court claims and evidence audit.' },
       { name: 'Employment Suit Representation', price: 'Contingency', desc: 'No upfront fee. 30% of recovered settlement.' }
     ],
     verified_cases: [
@@ -48,20 +48,20 @@ const LAWYERS_SEED = [
     ]
   },
   {
-    id: 'elena-rostova',
-    name: 'Elena Rostova',
+    id: 'priya-desai',
+    name: 'Priya Desai',
     specialty: 'contract',
     specialtyLabel: 'Contracts & Freelance',
-    avatarText: 'ER',
+    avatarText: 'PD',
     rating: '4.9',
     casesHandled: 84,
     winRate: '95%',
     bio: 'Specializes in tech freelance agreements, IP transfers, non-compete clauses, and drafting robust service agreements to prevent litigation.',
-    barNumber: 'TX #482910',
+    barNumber: 'GUJ/789/2018',
     packages: [
-      { name: 'Contract Revision Audit', price: '$200', desc: 'Line-by-line contract review and markup with redlines.' },
-      { name: 'Template Suite Bundle', price: '$400', desc: '3 customized client contract templates for your business.' },
-      { name: 'Custom Agreement Drafting', price: '$750', desc: 'Full custom contract drafting tailored to your specific project.' }
+      { name: 'Contract Revision Audit', price: '₹20,000', desc: 'Line-by-line contract review and markup with redlines.' },
+      { name: 'Template Suite Bundle', price: '₹40,000', desc: '3 customized client contract templates for your business.' },
+      { name: 'Custom Agreement Drafting', price: '₹75,000', desc: 'Full custom contract drafting tailored to your specific project.' }
     ],
     verified_cases: [
       { case_type: "SaaS IP Assignment Breach", year: 2024, court_level: "High Court", role: "Respondent's Counsel" },
@@ -70,20 +70,20 @@ const LAWYERS_SEED = [
     ]
   },
   {
-    id: 'david-kim',
-    name: 'David Kim',
+    id: 'amit-patel',
+    name: 'Amit Patel',
     specialty: 'consumer',
     specialtyLabel: 'Consumer Protection',
-    avatarText: 'DK',
+    avatarText: 'AP',
     rating: '4.7',
     casesHandled: 53,
     winRate: '88%',
     bio: 'Helping buyers challenge dishonest dealerships, defective appliances (lemon laws), hidden billing subscriptions, and credit reporting errors.',
-    barNumber: 'IL #928374',
+    barNumber: 'KAR/234/2014',
     packages: [
-      { name: 'Dealer Demand Notice', price: '$220', desc: 'Official letter detailing Lemon Law codes and replacement demand.' },
-      { name: 'Arbitration Filing Pack', price: '$500', desc: 'Drafting files and evidence binders for consumer arbitration boards.' },
-      { name: 'Court Action Retainer', price: '$1,200', desc: 'Filing state civil action against manufacturer or dealer.' }
+      { name: 'Dealer Demand Notice', price: '₹22,000', desc: 'Official letter detailing Lemon Law codes and replacement demand.' },
+      { name: 'Consumer Forum Filing Pack', price: '₹50,000', desc: 'Drafting files and evidence binders for consumer arbitration boards.' },
+      { name: 'Court Action Retainer', price: '₹1,20,000', desc: 'Filing state civil action against manufacturer or dealer.' }
     ],
     verified_cases: [
       { case_type: "Used Car Dealership Odometer Fraud", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
@@ -102,11 +102,11 @@ const LAWYERS_SEED = [
     casesHandled: 31,
     winRate: '94%',
     bio: 'Passionate about housing access. Specializes in habitability issues (mold, water leaks), retaliatory rent hikes, and local rent control disputes.',
-    barNumber: 'CA #619384',
+    barNumber: 'MAH/567/2016',
     packages: [
-      { name: 'Notice of Violation Draft', price: '$180', desc: 'Official notice demanding repairs with code inspector cites.' },
-      { name: 'Mediation Representation', price: '$500', desc: 'Preparation and advocacy at voluntary mediation boards.' },
-      { name: 'Rent Escrow Filing Support', price: '$800', desc: 'Filing to deposit rent with court until repairs are finished.' }
+      { name: 'Notice of Violation Draft', price: '₹18,000', desc: 'Official notice demanding repairs with code inspector cites.' },
+      { name: 'Mediation Representation', price: '₹50,000', desc: 'Preparation and advocacy at voluntary mediation boards.' },
+      { name: 'Rent Escrow Filing Support', price: '₹80,000', desc: 'Filing to deposit rent with court until repairs are finished.' }
     ],
     verified_cases: [
       { case_type: "Illegal Lockout & Security Deposit Refund", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
@@ -115,19 +115,19 @@ const LAWYERS_SEED = [
     ]
   },
   {
-    id: 'robert-vance',
-    name: 'Robert Vance, Esq.',
+    id: 'vikram-singh',
+    name: 'Vikram Singh, Esq.',
     specialty: 'criminal',
     specialtyLabel: 'Criminal Defense',
-    avatarText: 'RV',
+    avatarText: 'VS',
     rating: '4.8',
     casesHandled: 92,
     winRate: '90%',
     bio: 'Providing aggressive representation for criminal defense. Specialized in theft, traffic violations, misdemeanors, and civil rights disputes.',
-    barNumber: 'CA #928310',
+    barNumber: 'UP/890/2010',
     packages: [
-      { name: 'Arrest & Bail consultation', price: '$300', desc: 'Urgent consultation on legal rights and bail structure.' },
-      { name: 'Trial Defense Retainer', price: '$2,500', desc: 'Court appearance defense and discovery audit.' }
+      { name: 'Arrest & Bail consultation', price: '₹30,000', desc: 'Urgent consultation on legal rights and bail structure.' },
+      { name: 'Trial Defense Retainer', price: '₹2,50,000', desc: 'Court appearance defense and discovery audit.' }
     ],
     verified_cases: [
       { case_type: "Misdemeanor Theft Charge Dismissal", year: 2024, court_level: "District Court", role: "Respondent's Counsel" },
@@ -146,10 +146,10 @@ const LAWYERS_SEED = [
     casesHandled: 58,
     winRate: '94%',
     bio: 'Compassionate family law attorney. Focused on mutual consent divorce, child custody rights, alimony audits, and marital property settlements.',
-    barNumber: 'NY #618290',
+    barNumber: 'DEL/112/2017',
     packages: [
-      { name: 'Divorce Mediation Consultation', price: '$250', desc: 'Review of mediation steps, asset splits, and child custody rules.' },
-      { name: 'Mutual Consent Filing Pack', price: '$800', desc: 'Drafting all mutual separation agreements and court filing support.' }
+      { name: 'Divorce Mediation Consultation', price: '₹25,000', desc: 'Review of mediation steps, asset splits, and child custody rules.' },
+      { name: 'Mutual Consent Filing Pack', price: '₹80,000', desc: 'Drafting all mutual separation agreements and court filing support.' }
     ],
     verified_cases: [
       { case_type: "Mutual Separation Agreement Petition", year: 2024, court_level: "District Court", role: "Petitioner's Counsel" },
