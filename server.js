@@ -9,22 +9,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable CORS — restrict to ALLOWED_ORIGIN in production
-const corsOptions = {
-  origin: (origin, callback) => {
-    const allowed = process.env.ALLOWED_ORIGIN;
-    const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL;
-    // Allow all in local dev; restrict in production if ALLOWED_ORIGIN is set
-    if (!isProd || !allowed || !origin || origin === allowed) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS: Origin not allowed'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-app.use(cors(corsOptions));
+// Enable CORS completely open to avoid any Vercel domain issues
+app.use(cors());
 
 // Configure body parsers with limit for base64 avatar uploads
 app.use(express.json({ limit: "50mb" }));

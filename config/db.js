@@ -3,7 +3,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const url = (process.env.DATABASE_URL || "file:aequitas.db").trim();
+let defaultUrl = "file:aequitas.db";
+if (process.env.VERCEL && !process.env.DATABASE_URL) {
+  defaultUrl = "file:/tmp/aequitas.db"; // Use writable /tmp in Vercel serverless if Turso URL missing
+}
+const url = (process.env.DATABASE_URL || defaultUrl).trim();
 const authToken = process.env.DATABASE_AUTH_TOKEN ? process.env.DATABASE_AUTH_TOKEN.trim() : undefined;
 
 export const db = createClient({
