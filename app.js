@@ -260,14 +260,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Navigate to Official Advocate Signup page
-  linkGoToAdvocateSignup.addEventListener('click', (e) => {
-    e.preventDefault();
-    onboardingStep1.style.display = 'none';
-    onboardingStepAdvocateSignup.style.display = 'flex';
-    lucide.createIcons();
-  });
-
   // Navigate back to Step 1 from Advocate Signup page
   btnBackSignupToStep1.addEventListener('click', () => {
     onboardingStepAdvocateSignup.style.display = 'none';
