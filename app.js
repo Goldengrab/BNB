@@ -131,6 +131,80 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // ==================== AUTO LOGIN EXISTING ACCOUNT ====================
+  // Called when a 409 Duplicate is returned during signup — silently logs in the existing account
+  async function autoLoginExistingAccount(contact, preferredRole) {
+    // Hide all onboarding steps and show a loading toast
+    [onboardingStep3Client, onboardingStep3Lawyer, onboardingStep2, onboardingStep1].forEach(el => {
+      if (el) el.style.display = 'none';
+    });
+
+    // Show a non-blocking toast instead of an alert
+    const toast = document.createElement('div');
+    toast.id = 'auto-login-toast';
+    toast.style.cssText = `
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.15));
+      border: 1px solid rgba(16,185,129,0.4); border-radius: 12px;
+      padding: 14px 24px; color: var(--text-primary); font-size: 13px;
+      font-family: var(--font-mono); backdrop-filter: blur(12px);
+      z-index: 99999; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    `;
+    toast.innerHTML = `<span style="color:var(--accent-emerald);">✓</span> Account found — logging you in automatically...`;
+    document.body.appendChild(toast);
+
+    try {
+      // Try preferred role first, then the other
+      const rolesToTry = preferredRole === 'lawyer' ? ['lawyer', 'client'] : ['client', 'lawyer'];
+
+      for (const role of rolesToTry) {
+        const loginResponse = await fetch(`${API_BASE}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contact, role })
+        });
+
+        if (loginResponse.ok) {
+          const loginData = await loginResponse.json();
+          if (loginData.exists && loginData.user) {
+            const user = loginData.user;
+            // Update onboardingRole to the matched role
+            onboardingRole = role;
+            restoreUserSession(role, user);
+            linkSwitchRole.style.display = 'inline-block';
+            const myAccLnk = document.getElementById('link-my-account');
+            if (myAccLnk) myAccLnk.style.display = 'inline-block';
+            updateNavForUserRole();
+            switchTab('workspace');
+            onboardingOverlay.style.display = 'none';
+            persistSession();
+            lucide.createIcons();
+            checkDigiLockerLock();
+
+            // Update toast to success
+            toast.innerHTML = `<span style="color:var(--accent-emerald);">✓</span> Welcome back, ${user.name}! Redirecting to your dashboard...`;
+            setTimeout(() => toast.remove(), 3000);
+            return;
+          }
+        }
+      }
+
+      // If still not found, just show step 1 login cleanly
+      toast.innerHTML = `<span style="color:var(--accent-rose);">!</span> Could not find your account. Please log in manually.`;
+      setTimeout(() => toast.remove(), 3000);
+      onboardingStep1.style.display = 'flex';
+      if (contact) contactInput.value = contact;
+
+    } catch (err) {
+      console.error('Auto-login error:', err);
+      toast.innerHTML = `<span style="color:var(--accent-rose);">!</span> Connection error. Please try again.`;
+      setTimeout(() => toast.remove(), 3000);
+      onboardingStep1.style.display = 'flex';
+    }
+  }
+
+
   // ==================== ONBOARDING FLOW CONTROLLER ====================
   let onboardingRole = 'client'; // 'client' or 'lawyer'
   let onboardingContactType = 'phone'; // 'phone' or 'email'
@@ -680,13 +754,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!response.ok) {
         if (response.status === 409) {
-          alert('An account with this email/phone number already exists. Redirecting to login...');
-          onboardingStep3Client.style.display = 'none';
-          onboardingStep1.style.display = 'flex';
-          authToggleBtns.forEach(btn => {
-            if (btn.getAttribute('data-type') === 'phone') btn.click();
-          });
-          contactInput.value = onboardingContactVal;
+          // Account already exists — auto login and redirect to dashboard
+          await autoLoginExistingAccount(onboardingContactVal, 'client');
           return;
         }
         const errorData = await response.json();
@@ -862,13 +931,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!response.ok) {
         if (response.status === 409) {
-          alert('An account with this email/phone number already exists. Redirecting to login...');
-          onboardingStep3Lawyer.style.display = 'none';
-          onboardingStep1.style.display = 'flex';
-          authToggleBtns.forEach(btn => {
-            if (btn.getAttribute('data-type') === 'phone') btn.click();
-          });
-          contactInput.value = contactInfo;
+          // Account already exists — auto login and redirect to dashboard
+          await autoLoginExistingAccount(contactInfo, 'lawyer');
           return;
         }
         const errorData = await response.json();
@@ -2939,13 +3003,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!response.ok) {
           if (response.status === 409) {
-            alert('An account with this email/phone number already exists. Redirecting to login...');
-            onboardingStep3Lawyer.style.display = 'none';
-            onboardingStep1.style.display = 'flex';
-            authToggleBtns.forEach(btn => {
-              if (btn.getAttribute('data-type') === 'phone') btn.click();
-            });
-            contactInput.value = onboardingContactVal || "";
+            // Account already exists — auto login and redirect to dashboard
+            await autoLoginExistingAccount(onboardingContactVal || enrolment, 'lawyer');
             return;
           }
           const errorData = await response.json();
