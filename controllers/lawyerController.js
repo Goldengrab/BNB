@@ -79,22 +79,26 @@ export async function getLawyerById(req, res) {
 
     const row = result.rows[0];
     return res.status(200).json({
-      id: row.id,
-      name: row.name,
-      specialty: row.specialty,
-      specialtyLabel: row.specialty_label,
-      avatarText: row.avatar_text,
-      avatarBase64: row.avatar_base64,
-      rating: row.rating,
-      casesHandled: Number(row.cases_handled),
-      winRate: row.win_rate,
-      bio: row.bio,
-      barNumber: row.bar_number,
-      barCouncilId: row.bar_council_id,
-      verificationStatus: row.verification_status || 'pending',
-      contactInfo: row.contact_info,
-      packages: JSON.parse(row.packages),
-      verified_cases: JSON.parse(row.verified_cases)
+      success: true,
+      user: {
+        id: row.id,
+        name: row.name,
+        specialty: row.specialty,
+        specialtyLabel: row.specialty_label,
+        avatarText: row.avatar_text,
+        avatarBase64: row.avatar_base64,
+        rating: row.rating,
+        casesHandled: Number(row.cases_handled),
+        winRate: row.win_rate,
+        bio: row.bio,
+        barNumber: row.bar_number,
+        barCouncilId: row.bar_council_id,
+        verificationStatus: row.verification_status || 'pending',
+        contactInfo: row.contact_info,
+        packages: JSON.parse(row.packages),
+        verified_cases: JSON.parse(row.verified_cases),
+        isProfileCompleted: row.is_profile_completed === 1
+      }
     });
   } catch (error) {
     console.error("Error retrieving lawyer by ID:", error);

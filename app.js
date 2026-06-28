@@ -19,9 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function persistSession() {
     if (state.userType && state.userProfile) {
       localStorage.setItem('AEQUITAS_USER_TYPE', state.userType);
-      localStorage.setItem('AEQUITAS_USER_PROFILE', JSON.stringify(state.userProfile));
+      localStorage.setItem('AEQUITAS_USER_ID', state.userProfile.id);
+      localStorage.removeItem('AEQUITAS_USER_PROFILE');
     } else {
       localStorage.removeItem('AEQUITAS_USER_TYPE');
+      localStorage.removeItem('AEQUITAS_USER_ID');
       localStorage.removeItem('AEQUITAS_USER_PROFILE');
     }
   }
@@ -205,9 +207,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset state
     state.userType = null;
     state.userProfile = null;
-    state.activeConsultation = null;
-    state.isWorkspaceInitialized = false;
-    persistSession();
+    localStorage.removeItem("AEQUITAS_USER_ID");
+    localStorage.removeItem("AEQUITAS_USER_TYPE");
+    localStorage.removeItem("AEQUITAS_USER_PROFILE");
 
     // Reset status UI
     const userRoleEl = document.querySelector('.user-role');
@@ -3562,22 +3564,48 @@ Advocate for Plaintiff`,
 
   // Restore user session on startup if present
   const savedUserType = localStorage.getItem('AEQUITAS_USER_TYPE');
-  const savedUserProfile = localStorage.getItem('AEQUITAS_USER_PROFILE');
-  if (savedUserType && savedUserProfile) {
-    try {
-      const userProfile = JSON.parse(savedUserProfile);
-      restoreUserSession(savedUserType, userProfile);
-      // Force restore after refresh
-      onboardingOverlay.style.display = 'none';
-      updateNavForUserRole();
-      switchTab('workspace');
-      lucide.createIcons();
-      checkDigiLockerLock();
-    } catch (err) {
-      console.error("Failed to restore session:", err);
-      localStorage.removeItem('AEQUITAS_USER_TYPE');
-      localStorage.removeItem('AEQUITAS_USER_PROFILE');
-    }
+  const savedUserId = localStorage.getItem('AEQUITAS_USER_ID');
+  if (savedUserType && savedUserId) {
+    (async () => {
+      try {
+        const endpoint = savedUserType === 'lawyer'
+          ? `${API_BASE}/api/lawyers/${savedUserId}`
+          : `${API_BASE}/api/clients/${savedUserId}`;
+
+        const res = await fetch(endpoint);
+        if (res.status === 404) {
+          throw new Error('404');
+        }
+        if (!res.ok) {
+          throw new Error('Failed to fetch user');
+        }
+        const data = await res.json();
+        const user = data.user;
+
+        restoreUserSession(savedUserType, user);
+        // Force restore after refresh
+        onboardingOverlay.style.display = 'none';
+        updateNavForUserRole();
+        switchTab('workspace');
+      } catch (err) {
+        console.error("Failed to restore session:", err);
+        localStorage.removeItem('AEQUITAS_USER_TYPE');
+        localStorage.removeItem('AEQUITAS_USER_ID');
+        localStorage.removeItem('AEQUITAS_USER_PROFILE');
+
+        // Show login screen
+        onboardingStep1.style.display = 'flex';
+        onboardingStep2.style.display = 'none';
+        onboardingStep3Client.style.display = 'none';
+        onboardingStep3Lawyer.style.display = 'none';
+        onboardingStepAdvocateSignup.style.display = 'none';
+        onboardingOverlay.style.display = 'flex';
+        updateNavForUserRole();
+        switchTab('analyzer');
+      }
+    })();
+  } else {
+    localStorage.removeItem('AEQUITAS_USER_PROFILE');
   }
 
   // ==================== DIGILOCKER VERIFICATION LOGIC ====================

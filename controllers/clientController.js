@@ -132,12 +132,16 @@ export async function getClientById(req, res) {
 
     const row = result.rows[0];
     return res.status(200).json({
-      id: row.id,
-      name: row.name,
-      city: row.city,
-      contact: row.contact,
-      avatar: row.avatar,
-      interest: row.interest
+      success: true,
+      user: {
+        id: row.id,
+        name: row.name,
+        city: row.city,
+        contact: row.contact,
+        avatar: row.avatar,
+        interest: row.interest,
+        isProfileCompleted: row.is_profile_completed === 1
+      }
     });
   } catch (error) {
     console.error("Error retrieving client by ID:", error);
