@@ -172,26 +172,20 @@ export async function analyzeCase(req, res) {
     // FALLBACK MOCK RESPONSE FOR DEMO PURPOSES
     console.warn("ANTHROPIC_API_KEY is missing. Returning mock demo response.");
     return res.status(200).json({
+      category: "Tenancy & Real Estate",
       title: "Tenant Security Deposit Dispute",
-      category: "tenancy",
-      verdictText: "Based on the provided details, this falls under tenancy dispute laws. Withholding a deposit for pre-existing damages is generally considered an unlawful deduction if documented properly in a move-in inspection.",
-      financialViability: "high",
-      timelineDays: 45,
-      urgency: "Medium",
-      nextSteps: [
+      filterTag: "tenancy",
+      viability: 85,
+      actionability: "Strong",
+      claimValue: "₹25,000",
+      filingCosts: "₹500 - ₹2,000 (Small Causes Court)",
+      narrative: "Based on the provided details, this falls under tenancy dispute laws. Withholding a deposit for pre-existing damages is generally considered an unlawful deduction if documented properly in a move-in inspection. Section 108 of the Transfer of Property Act protects tenants from arbitrary deductions.",
+      steps: [
         "Send a formal written demand letter to the landlord",
         "Compile move-in inspection photos and lease agreement",
         "If unresolved, file a petition with the Rent Control Court"
       ],
-      recommendedLawyers: [
-        {
-          id: "neha-sharma",
-          name: "Neha Sharma, Esq.",
-          specialty: "Tenancy & Housing Law",
-          rating: "4.9",
-          matchReason: "Specializes in security deposit disputes and has a 93% win rate in local courts."
-        }
-      ]
+      matchNote: "We have found specialized tenancy advocates who frequently handle security deposit claims in your local courts."
     });
   }
 
