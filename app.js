@@ -1464,6 +1464,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabId === 'settings') {
       populateSettingsForm();
     }
+    // Re-render lawyer caseload every time the workspace/caseload tab is opened
+    // so any new client bookings (state.activeConsultation) appear immediately
+    if (tabId === 'workspace' && state.userType === 'lawyer' && typeof renderLawyerCaseload === 'function') {
+      renderLawyerCaseload();
+    }
   }
 
   // Bind tab clicks
@@ -2549,6 +2554,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show navigation badge alert
     workspaceBadge.style.display = 'inline-block';
 
+    // If logged-in user is a lawyer, refresh their client caseload so the new booking appears
+    // (In this demo both client & lawyer share one browser window — this handles cross-role visibility)
+    if (typeof renderLawyerCaseload === 'function') {
+      renderLawyerCaseload();
+    }
+
     // Go to workspace tab
     switchTab('workspace');
   });
@@ -3563,7 +3574,22 @@ document.addEventListener('DOMContentLoaded', () => {
         vSelect.innerHTML = '';
         hSelect.innerHTML = '';
         bSelect.innerHTML = '';
-        caseloadClients.forEach(c => {
+
+        // Build merged list: hardcoded + any new booking
+        const allDropdownClients = [...caseloadClients];
+        if (state.activeConsultation) {
+          const bookedName = state.userProfile ? state.userProfile.name : 'New Client (Booked)';
+          const alreadyExists = allDropdownClients.some(c => c.id === 'client-current-user');
+          if (!alreadyExists) {
+            allDropdownClients.unshift({
+              id: 'client-current-user',
+              name: bookedName,
+              issue: state.activeConsultation.brief
+            });
+          }
+        }
+
+        allDropdownClients.forEach(c => {
           const opt1 = document.createElement('option');
           opt1.value = c.name;
           opt1.textContent = `${c.name} (${c.issue})`;
