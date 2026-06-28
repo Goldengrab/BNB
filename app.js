@@ -2439,8 +2439,13 @@ document.addEventListener('DOMContentLoaded', () => {
     state.activeConsultation = {
       brief: notes || `${lawyer.specialtyLabel} Consultation Request`,
       date: dateVal,
-      mode: modeVal
+      mode: modeVal,
+      clientName: state.userProfile ? state.userProfile.name : 'Demo Client',
+      lawyerId: lawyer.id
     };
+    
+    // Save to localStorage for demo persistence across logins
+    localStorage.setItem('AEQUITAS_MOCK_BOOKING', JSON.stringify(state.activeConsultation));
 
     // Set Workspace variables
     state.isWorkspaceInitialized = true;
@@ -3710,7 +3715,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Merge dynamic active consultations if matching this lawyer
     const activeClientsList = [...caseloadClients];
-    if (state.activeConsultation) {
+    
+    // Try to load booking from localStorage for demo persistence
+    const savedBooking = localStorage.getItem('AEQUITAS_MOCK_BOOKING');
+    if (savedBooking && !state.activeConsultation) {
+      try {
+        state.activeConsultation = JSON.parse(savedBooking);
+      } catch (e) {}
+    }
+
+    if (state.activeConsultation && (!state.activeConsultation.lawyerId || state.activeConsultation.lawyerId == state.userProfile.id)) {
       const matchExists = activeClientsList.some(c => c.id === 'client-current-user');
       if (!matchExists) {
         if (!state.activeConsultation.chat) {
@@ -3720,14 +3734,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         activeClientsList.unshift({
           id: 'client-current-user',
-          name: state.userProfile ? state.userProfile.name : 'You (Demo Client Booking)',
+          name: state.activeConsultation.clientName || 'New Client Booking',
           issue: state.activeConsultation.brief,
           description: state.activeConsultation.brief,
           date: state.activeConsultation.date,
           mode: state.activeConsultation.mode,
           status: 'New Inquiry',
           docs: [
-            { name: 'LeaseAgreement.pdf', size: '1.2 MB', scanned: false }
+            { name: 'CaseSummary.pdf', size: '1.2 MB', scanned: false }
           ],
           chat: state.activeConsultation.chat
         });
