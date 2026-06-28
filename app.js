@@ -2422,7 +2422,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  bookingForm.addEventListener('submit', (e) => {
+  bookingForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const lawyer = state.selectedLawyer;
@@ -2444,8 +2444,23 @@ document.addEventListener('DOMContentLoaded', () => {
       lawyerId: lawyer.id
     };
     
-    // Save to localStorage for demo persistence across logins
-    localStorage.setItem('AEQUITAS_MOCK_BOOKING', JSON.stringify(state.activeConsultation));
+    // Save to Turso Database via API
+    try {
+      await fetch(`${API_BASE}/api/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lawyerId: lawyer.id,
+          clientId: state.userProfile ? state.userProfile.id : 'client-demo',
+          clientName: state.activeConsultation.clientName,
+          brief: state.activeConsultation.brief,
+          date: state.activeConsultation.date,
+          mode: state.activeConsultation.mode
+        })
+      });
+    } catch (err) {
+      console.error("Failed to save booking to database", err);
+    }
 
     // Set Workspace variables
     state.isWorkspaceInitialized = true;
@@ -3708,7 +3723,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function renderLawyerCaseload() {
+  async function renderLawyerCaseload() {
     const listContainer = document.getElementById('lawyer-client-list');
     if (!listContainer) return;
     listContainer.innerHTML = '';
@@ -3716,7 +3731,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // Merge dynamic active consultations if matching this lawyer
     const activeClientsList = [...caseloadClients];
     
-    // Try to load booking from localStorage for demo persistence
+    // Fetch bookings from Turso Database
+    if (state.userProfile && state.userProfile.id) {
+      try {
+        const res = await fetch(`${API_BASE}/api/bookings/${state.userProfile.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.bookings && data.bookings.length > 0) {
+            data.bookings.forEach((booking, idx) => {
+              activeClientsList.unshift({
+                id: `client-db-${booking.id}`,
+                name: booking.client_name || 'New Client Booking',
+                issue: booking.brief,
+                description: booking.brief,
+                date: booking.date,
+                mode: booking.mode,
+                status: booking.status || 'New Inquiry',
+                docs: [
+                  { name: 'CaseSummary.pdf', size: '1.2 MB', scanned: false }
+                ],
+                chat: [
+                  { sender: 'client', text: `Hi, I booked you for: "${booking.brief}". Let's discuss.` }
+                ]
+              });
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch bookings from DB:", err);
+      }
+    }
+
+    // Try to load booking from localStorage for fallback demo persistence
     const savedBooking = localStorage.getItem('AEQUITAS_MOCK_BOOKING');
     if (savedBooking && !state.activeConsultation) {
       try {

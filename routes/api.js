@@ -3,6 +3,7 @@ import { getAllLawyers, getLawyerById, registerLawyer, updateLawyerProfile, dele
 import { getAllClients, registerClient, getClientById, updateClientProfile, deleteClient } from "../controllers/clientController.js";
 import { loginUser } from "../controllers/authController.js";
 import { analyzeCase } from "../controllers/aiController.js";
+import { createBooking, getLawyerBookings } from "../controllers/bookingController.js";
 
 const router = Router();
 
@@ -23,6 +24,10 @@ router.delete("/lawyers/:id", deleteLawyer);
 // Client routes
 router.get("/clients", getAllClients);
 router.post("/clients", registerClient);
+
+// Booking routes
+router.post("/bookings", createBooking);
+router.get("/bookings/:lawyerId", getLawyerBookings);
 router.get("/clients/:id", getClientById);
 router.put("/clients/:id", updateClientProfile);
 router.delete("/clients/:id", deleteClient);
