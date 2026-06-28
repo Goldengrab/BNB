@@ -4190,8 +4190,9 @@ Advocate for Plaintiff`,
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            lawyerId: state.userProfile.id,
-            barCouncilId: barId
+            lawyerId: state.userProfile?.id || null,
+            barCouncilId: barId,
+            contactInfo: state.userProfile?.contactInfo || onboardingContactVal || null
           })
         });
 
@@ -4200,9 +4201,14 @@ Advocate for Plaintiff`,
           throw new Error(err.error || 'Verification failed');
         }
 
-        alert('Identity verified successfully! Welcome to your dashboard.');
+        const resData = await res.json();
 
-        // Update local state
+        alert('✅ Identity verified successfully! Welcome to your dashboard.');
+
+        // Update local state — use resolved ID from backend if our local ID was missing
+        if (resData.lawyerId && !state.userProfile.id) {
+          state.userProfile.id = resData.lawyerId;
+        }
         state.userProfile.verificationStatus = 'verified';
         state.userProfile.barCouncilId = barId;
         persistSession();

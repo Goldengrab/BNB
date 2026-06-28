@@ -353,24 +353,55 @@ export async function registerLawyer(req, res) {
  */
 export async function verifyDigiLocker(req, res) {
   try {
-    const { lawyerId, barCouncilId } = req.body;
+    const { lawyerId, barCouncilId, contactInfo } = req.body;
 
-    if (!lawyerId || !barCouncilId) {
-      return res.status(400).json({ error: "lawyerId and barCouncilId are required." });
+    if (!barCouncilId) {
+      return res.status(400).json({ error: "barCouncilId is required." });
     }
 
-    const check = await db.execute({ sql: "SELECT id FROM lawyers WHERE id = ?", args: [lawyerId] });
-    if (check.rows.length === 0) {
-      return res.status(404).json({ error: "Advocate not found." });
+    let resolvedId = lawyerId;
+
+    // If lawyerId provided, try to find by ID first
+    if (lawyerId) {
+      const check = await db.execute({ sql: "SELECT id FROM lawyers WHERE id = ?", args: [lawyerId] });
+      if (check.rows.length === 0) {
+        // Fallback: try to find by contactInfo
+        if (contactInfo) {
+          const fallback = await db.execute({
+            sql: "SELECT id FROM lawyers WHERE contact_info = ?",
+            args: [contactInfo]
+          });
+          if (fallback.rows.length > 0) {
+            resolvedId = fallback.rows[0].id;
+          } else {
+            return res.status(404).json({ error: "Advocate not found. Please ensure you are logged in with the correct account." });
+          }
+        } else {
+          return res.status(404).json({ error: "Advocate not found. Please ensure you are logged in with the correct account." });
+        }
+      }
+    } else if (contactInfo) {
+      // No lawyerId provided — find by contactInfo
+      const fallback = await db.execute({
+        sql: "SELECT id FROM lawyers WHERE contact_info = ?",
+        args: [contactInfo]
+      });
+      if (fallback.rows.length > 0) {
+        resolvedId = fallback.rows[0].id;
+      } else {
+        return res.status(404).json({ error: "Advocate not found. Please ensure you are logged in with the correct account." });
+      }
+    } else {
+      return res.status(400).json({ error: "Either lawyerId or contactInfo is required." });
     }
 
     // Update status to verified and make profile visible
     await db.execute({
       sql: "UPDATE lawyers SET verification_status = 'verified', is_visible = 1, bar_council_id = ? WHERE id = ?",
-      args: [barCouncilId, lawyerId]
+      args: [barCouncilId, resolvedId]
     });
 
-    return res.status(200).json({ message: "DigiLocker verification successful. Profile is now visible." });
+    return res.status(200).json({ message: "DigiLocker verification successful. Profile is now visible.", lawyerId: resolvedId });
   } catch (error) {
     console.error("Error verifying via DigiLocker:", error);
     return res.status(500).json({ error: "Internal Server Error during DigiLocker verification." });
