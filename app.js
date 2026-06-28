@@ -8,11 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Dynamic API Base URL to allow client-side preview on other servers (e.g. Live Server on port 5500) while communicating with backend on port 3000
   // Set this to your deployed cloud backend URL in production (e.g. 'https://aequitas-backend.onrender.com')
-  const PRODUCTION_BACKEND_URL = ''; 
+  const PRODUCTION_BACKEND_URL = '';
 
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const API_BASE = (isLocalhost && window.location.port !== '3000') 
-    ? `${window.location.protocol}//${window.location.hostname}:3000` 
+  const API_BASE = (isLocalhost && window.location.port !== '3000')
+    ? `${window.location.protocol}//${window.location.hostname}:3000`
     : '';
 
   // ==================== SESSION PERSISTENCE HELPERS ====================
@@ -34,20 +34,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const userRoleEl = document.querySelector('.user-role');
     const statusTextEl = document.querySelector('.status-text');
     const statusIndicator = document.querySelector('.status-indicator');
-    
+
     userRoleEl.textContent = user.name;
-    
+
     if (role === 'lawyer') {
-      statusTextEl.textContent = user.status === 'Pending Verification' 
-        ? 'Pending Verification' 
+      statusTextEl.textContent = user.status === 'Pending Verification'
+        ? 'Pending Verification'
         : 'Bar Verified & Active';
 
       statusIndicator.className = 'status-indicator';
-      statusIndicator.style.backgroundColor = user.status === 'Pending Verification' 
-        ? 'var(--text-muted)' 
+      statusIndicator.style.backgroundColor = user.status === 'Pending Verification'
+        ? 'var(--text-muted)'
         : 'var(--accent-cyan)';
-      statusIndicator.style.boxShadow = user.status === 'Pending Verification' 
-        ? 'none' 
+      statusIndicator.style.boxShadow = user.status === 'Pending Verification'
+        ? 'none'
         : '0 0 8px var(--accent-cyan)';
     } else {
       statusTextEl.textContent = `${user.city} • Client`;
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
       avatarCircle.style.borderRadius = '50%';
       avatarCircle.style.marginRight = '8px';
       avatarCircle.style.overflow = 'hidden';
-      avatarCircle.style.background = role === 'lawyer' 
+      avatarCircle.style.background = role === 'lawyer'
         ? 'linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo))'
         : 'linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan))';
       avatarCircle.style.display = 'flex';
@@ -77,13 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
       avatarCircle.style.fontWeight = 'bold';
       userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
     }
-    
+
     const avatarSrc = role === 'lawyer' ? user.avatarBase64 : user.avatar;
     if (avatarSrc) {
       avatarCircle.innerHTML = `<img src="${avatarSrc}" style="width:100%; height:100%; object-fit:cover;">`;
     } else {
-      avatarCircle.textContent = role === 'lawyer' 
-        ? user.avatarText 
+      avatarCircle.textContent = role === 'lawyer'
+        ? user.avatarText
         : (user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'CL');
     }
 
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const otpTimerSeconds = document.getElementById('otp-timer-seconds');
   const btnResendOtp = document.getElementById('btn-resend-otp');
   const btnBackStep1 = document.getElementById('btn-back-to-step1');
-  
+
   // Official Advocate Signup selectors
   const linkGoToAdvocateSignup = document.getElementById('link-go-to-advocate-signup');
   const btnBackSignupToStep1 = document.getElementById('btn-back-signup-to-step1');
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Switch Account / Log Out Handler
   linkSwitchRole.addEventListener('click', (e) => {
     e.preventDefault();
-    
+
     // Reset state
     state.userType = null;
     state.userProfile = null;
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userRoleEl = document.querySelector('.user-role');
     const statusTextEl = document.querySelector('.status-text');
     const statusIndicator = document.querySelector('.status-indicator');
-    
+
     userRoleEl.textContent = 'Anonymous Client';
     statusTextEl.textContent = 'Encrypted Connection';
     statusIndicator.className = 'status-indicator active';
@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     onboardingContactVal = contactInput.value.trim();
     onboardingRole = document.querySelector('input[name="onboarding-role"]:checked').value;
-    
+
     // Update OTP text
     const hint = document.getElementById('otp-hint-text');
     hint.textContent = `We sent a 4-digit code to your ${onboardingContactType === 'phone' ? 'phone' : 'email'} at ${onboardingContactVal}. (Use code 1234 to proceed)`;
@@ -357,10 +357,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Swap steps
     onboardingStep1.style.display = 'none';
     onboardingStep2.style.display = 'flex';
-    
+
     // Start countdown timer
     startOtpCountdown();
-    
+
     // Clear and focus first OTP box
     const otpBoxes = document.querySelectorAll('.otp-input-box');
     otpBoxes.forEach(box => { box.value = ''; });
@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Step 2: Submit OTP verification
   otpForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     let enteredCode = '';
     otpBoxes.forEach(box => { enteredCode += box.value; });
 
@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (loginData.exists) {
           const user = loginData.user;
-          
+
           if (!user.isProfileCompleted) {
             // Profile is not complete (legacy accounts or stub records)
             onboardingOverlay.style.display = 'flex';
@@ -481,20 +481,20 @@ document.addEventListener('DOMContentLoaded', () => {
           const userRoleEl = document.querySelector('.user-role');
           const statusTextEl = document.querySelector('.status-text');
           const statusIndicator = document.querySelector('.status-indicator');
-          
+
           userRoleEl.textContent = user.name;
-          
+
           if (onboardingRole === 'lawyer') {
-            statusTextEl.textContent = user.status === 'Pending Verification' 
-              ? 'Pending Verification' 
+            statusTextEl.textContent = user.status === 'Pending Verification'
+              ? 'Pending Verification'
               : 'Bar Verified & Active';
 
             statusIndicator.className = 'status-indicator';
-            statusIndicator.style.backgroundColor = user.status === 'Pending Verification' 
-              ? 'var(--text-muted)' 
+            statusIndicator.style.backgroundColor = user.status === 'Pending Verification'
+              ? 'var(--text-muted)'
               : 'var(--accent-cyan)';
-            statusIndicator.style.boxShadow = user.status === 'Pending Verification' 
-              ? 'none' 
+            statusIndicator.style.boxShadow = user.status === 'Pending Verification'
+              ? 'none'
               : '0 0 8px var(--accent-cyan)';
           } else {
             statusTextEl.textContent = `${user.city} • Client`;
@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             avatarCircle.style.borderRadius = '50%';
             avatarCircle.style.marginRight = '8px';
             avatarCircle.style.overflow = 'hidden';
-            avatarCircle.style.background = onboardingRole === 'lawyer' 
+            avatarCircle.style.background = onboardingRole === 'lawyer'
               ? 'linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo))'
               : 'linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan))';
             avatarCircle.style.display = 'flex';
@@ -524,13 +524,13 @@ document.addEventListener('DOMContentLoaded', () => {
             avatarCircle.style.fontWeight = 'bold';
             userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
           }
-          
+
           const avatarSrc = onboardingRole === 'lawyer' ? user.avatarBase64 : user.avatar;
           if (avatarSrc) {
             avatarCircle.innerHTML = `<img src="${avatarSrc}" style="width:100%; height:100%; object-fit:cover;">`;
           } else {
-            avatarCircle.textContent = onboardingRole === 'lawyer' 
-              ? user.avatarText 
+            avatarCircle.textContent = onboardingRole === 'lawyer'
+              ? user.avatarText
               : (user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'CL');
           }
 
@@ -559,11 +559,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fallback: Check local memory LAWYERS_DATABASE if database check failed (for seeded data in UI)
-    const existingLawyer = onboardingRole === 'lawyer' && onboardingContactVal 
-      ? LAWYERS_DATABASE.find(lawyer => 
-          (lawyer.contactInfo && lawyer.contactInfo.toLowerCase() === onboardingContactVal.toLowerCase()) || 
-          (lawyer.barNumber && lawyer.barNumber.toLowerCase() === onboardingContactVal.toLowerCase())
-        )
+    const existingLawyer = onboardingRole === 'lawyer' && onboardingContactVal
+      ? LAWYERS_DATABASE.find(lawyer =>
+        (lawyer.contactInfo && lawyer.contactInfo.toLowerCase() === onboardingContactVal.toLowerCase()) ||
+        (lawyer.barNumber && lawyer.barNumber.toLowerCase() === onboardingContactVal.toLowerCase())
+      )
       : null;
 
     if (existingLawyer) {
@@ -574,18 +574,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const userRoleEl = document.querySelector('.user-role');
       const statusTextEl = document.querySelector('.status-text');
       const statusIndicator = document.querySelector('.status-indicator');
-      
+
       userRoleEl.textContent = existingLawyer.name;
-      statusTextEl.textContent = existingLawyer.status === 'Pending Verification' 
-        ? 'Pending Verification' 
+      statusTextEl.textContent = existingLawyer.status === 'Pending Verification'
+        ? 'Pending Verification'
         : 'Bar Verified & Active';
 
       statusIndicator.className = 'status-indicator';
-      statusIndicator.style.backgroundColor = existingLawyer.status === 'Pending Verification' 
-        ? 'var(--text-muted)' 
+      statusIndicator.style.backgroundColor = existingLawyer.status === 'Pending Verification'
+        ? 'var(--text-muted)'
         : 'var(--accent-cyan)';
-      statusIndicator.style.boxShadow = existingLawyer.status === 'Pending Verification' 
-        ? 'none' 
+      statusIndicator.style.boxShadow = existingLawyer.status === 'Pending Verification'
+        ? 'none'
         : '0 0 8px var(--accent-cyan)';
 
       // Update avatar
@@ -701,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const userRoleEl = document.querySelector('.user-role');
       const statusTextEl = document.querySelector('.status-text');
       const statusIndicator = document.querySelector('.status-indicator');
-      
+
       userRoleEl.textContent = savedClient.name;
       statusTextEl.textContent = `${savedClient.city} • Client`;
       statusIndicator.className = 'status-indicator active';
@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarCircle.style.color = 'white';
         avatarCircle.style.fontSize = '10px';
         avatarCircle.style.fontWeight = 'bold';
-        
+
         userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
       }
 
@@ -738,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Dynamic case analyzer autofill city/interest
       filterSpecialty.value = savedClient.interest;
-      
+
       // Update navigation tabs based on role
       updateNavForUserRole();
 
@@ -752,7 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
       persistSession();
     } catch (err) {
       console.warn('Backend client registration failed, falling back to local session:', err);
-      
+
       const savedClient = {
         id: `client-${Date.now()}`,
         name: name,
@@ -769,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const userRoleEl = document.querySelector('.user-role');
       const statusTextEl = document.querySelector('.status-text');
       const statusIndicator = document.querySelector('.status-indicator');
-      
+
       userRoleEl.textContent = savedClient.name;
       statusTextEl.textContent = `${savedClient.city} • Client`;
       statusIndicator.className = 'status-indicator active';
@@ -793,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarCircle.style.color = 'white';
         avatarCircle.style.fontSize = '10px';
         avatarCircle.style.fontWeight = 'bold';
-        
+
         userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
       }
 
@@ -806,7 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Dynamic case analyzer autofill city/interest
       filterSpecialty.value = savedClient.interest;
-      
+
       // Update navigation tabs based on role
       updateNavForUserRole();
 
@@ -886,7 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const userRoleEl = document.querySelector('.user-role');
       const statusTextEl = document.querySelector('.status-text');
       const statusIndicator = document.querySelector('.status-indicator');
-      
+
       userRoleEl.textContent = savedLawyer.name;
       statusTextEl.textContent = `${city} • Advocate`;
       statusIndicator.className = 'status-indicator active';
@@ -910,7 +910,7 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarCircle.style.color = 'white';
         avatarCircle.style.fontSize = '10px';
         avatarCircle.style.fontWeight = 'bold';
-        
+
         userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
       }
 
@@ -937,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
       checkDigiLockerLock();
     } catch (err) {
       console.warn('Backend lawyer registration failed, falling back to local session:', err);
-      
+
       const barNumber = `BAR #${Math.floor(100000 + Math.random() * 900000)}`;
 
       const savedLawyer = {
@@ -975,7 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const userRoleEl = document.querySelector('.user-role');
       const statusTextEl = document.querySelector('.status-text');
       const statusIndicator = document.querySelector('.status-indicator');
-      
+
       userRoleEl.textContent = name;
       statusTextEl.textContent = `${city} • Advocate`;
       statusIndicator.className = 'status-indicator active';
@@ -999,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarCircle.style.color = 'white';
         avatarCircle.style.fontSize = '10px';
         avatarCircle.style.fontWeight = 'bold';
-        
+
         userStatusCard.insertBefore(avatarCircle, userStatusCard.firstChild);
       }
 
@@ -1297,7 +1297,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const analyzerLoadingState = document.getElementById('analyzer-loading-state');
   const analyzerSuccessState = document.getElementById('analyzer-success-state');
   const loadingStatusText = document.getElementById('loading-status-text');
-  
+
   // Tab 1 Success Outputs
   const resCaseCategory = document.getElementById('result-case-category');
   const resCaseTitle = document.getElementById('result-case-title');
@@ -1367,7 +1367,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==================== SPA ROUTING ====================
   function switchTab(tabId) {
     state.activeTab = tabId;
-    
+
     // Update navbar class
     navTabButtons.forEach(btn => {
       if (btn.getAttribute('data-tab') === tabId) {
@@ -1444,18 +1444,18 @@ document.addEventListener('DOMContentLoaded', () => {
     steps.forEach((step, index) => {
       setTimeout(() => {
         loadingStatusText.textContent = step.text;
-        
+
         // Update check icons in steps
         const stepEl = document.getElementById(step.id);
         if (stepEl) {
           stepEl.classList.add('active');
           if (index > 0) {
-            const prevEl = document.getElementById(steps[index-1].id);
+            const prevEl = document.getElementById(steps[index - 1].id);
             if (prevEl) {
               prevEl.classList.remove('active');
               prevEl.classList.add('complete');
               prevEl.innerHTML = '<i data-lucide="check-circle-2" class="text-emerald"></i> ' + prevEl.textContent.trim();
-              lucide.createIcons({attrs: {class: 'text-emerald'}});
+              lucide.createIcons({ attrs: { class: 'text-emerald' } });
             }
           }
         }
@@ -1468,7 +1468,7 @@ document.addEventListener('DOMContentLoaded', () => {
               finalEl.classList.remove('active');
               finalEl.classList.add('complete');
               finalEl.innerHTML = '<i data-lucide="check-circle-2" class="text-emerald"></i> ' + finalEl.textContent.trim();
-              lucide.createIcons({attrs: {class: 'text-emerald'}});
+              lucide.createIcons({ attrs: { class: 'text-emerald' } });
             }
             generateAnalysisReport(description);
           }, 800);
@@ -1559,7 +1559,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resCaseCategory.textContent = analysis.category;
     resCaseCategory.className = `pill-tag text-accent ${analysis.filterTag}`;
     resCaseTitle.textContent = analysis.title;
-    
+
     // Viability circle computation
     const radius = 32;
     const circumference = 2 * Math.PI * radius; // ~201.06
@@ -1617,7 +1617,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtered = LAWYERS_DATABASE.filter(lawyer => {
       // Specialty Filter
       if (specialtyVal !== 'all' && lawyer.specialty !== specialtyVal) return false;
-      
+
       // Pricing Filter
       if (pricingVal !== 'all') {
         const hasMatchingPackage = lawyer.packages.some(pkg => {
@@ -1626,7 +1626,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (pricingVal === 'contingency' && pkg.price.toLowerCase().includes('contingency')) return true;
           return false;
         });
-        
+
         // Add manual check since some prices represent flat package rates
         if (pricingVal === 'flat' && !lawyer.packages.some(p => p.price !== 'Contingency')) return false;
         if (pricingVal === 'contingency' && !lawyer.packages.some(p => p.price.toLowerCase().includes('contingency'))) return false;
@@ -1657,7 +1657,7 @@ document.addEventListener('DOMContentLoaded', () => {
     filtered.forEach(lawyer => {
       const card = document.createElement('div');
       card.className = 'glass-card lawyer-card file-folder-card';
-      
+
       // Build package elements
       let packagesHTML = '';
       lawyer.packages.forEach(pkg => {
@@ -1669,7 +1669,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       });
 
-      const avatarHTML = lawyer.avatarBase64 
+      const avatarHTML = lawyer.avatarBase64
         ? `<img src="${lawyer.avatarBase64}" alt="${lawyer.name}" style="width:100%; height:100%; object-fit:cover;">`
         : lawyer.avatarText;
 
@@ -1740,7 +1740,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </button>
         </div>
       `;
-      
+
       lawyersListContainer.appendChild(card);
     });
 
@@ -1760,7 +1760,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const lawyerId = btn.getAttribute('data-id');
         const timelineDiv = document.getElementById(`tr-timeline-${lawyerId}`);
         const icon = btn.querySelector('i');
-        
+
         if (timelineDiv.style.display === 'none') {
           timelineDiv.style.display = 'block';
           icon.setAttribute('data-lucide', 'chevron-up');
@@ -1800,7 +1800,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           // Perform check (Anthropic API with mock fallback)
           const result = await checkPlausibilityWithClaude(lawyer, queryText);
-          
+
           const stampClass = result.plausible_match ? 'match' : 'no-match';
           const stampText = result.plausible_match ? 'PLAUSIBLE MATCH' : 'LOW PLAUSIBILITY';
 
@@ -1951,7 +1951,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   bookingForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    
+
     const lawyer = state.selectedLawyer;
     const selectedRadioIndex = document.querySelector('input[name="modal-package-select"]:checked').value;
     const selectedPkg = lawyer.packages[selectedRadioIndex];
@@ -2037,13 +2037,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset Chat Messages
     chatMessagesBox.innerHTML = '';
-    
+
     // Add Welcome messages (simulated conversation flow)
     const welcomeMsg1 = `Hello! I'm ${lawyer.name}. I've successfully received your consultation request. Let's schedule our **${modeVal}** consultation on **${dateVal}**.`;
     const welcomeMsg2 = `I have reviewed your case description summary: <br><em>"${notes}"</em>.<br>In case of any date changes, I have saved your backup contact detail: <strong>${backupContact}</strong>.`;
-    
+
     appendChatMessage('received', welcomeMsg1, lawyer.avatarText);
-    
+
     setTimeout(() => {
       appendChatMessage('received', welcomeMsg2, lawyer.avatarText);
     }, 600);
@@ -2082,7 +2082,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Select Sarah Jenkins and Tenancy package
     state.selectedLawyer = LAWYERS_DATABASE[0];
     const mockFormSubmitEvent = new Event('submit');
-    
+
     // Populate fake selection
     state.isWorkspaceInitialized = true;
     state.workspaceData.lawyer = LAWYERS_DATABASE[0];
@@ -2124,7 +2124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset Chat Messages
     chatMessagesBox.innerHTML = '';
-    
+
     // Injected conversation
     appendChatMessage('received', "Hello! I reviewed the photos of the cabinet scratches you uploaded. Those are clearly normal wear and tear under local laws. Let's send the formal demand notice tomorrow. Do you have the landlord's mailing address?", 'SJ');
     appendChatMessage('sent', "Yes, I just added it to the files. It's written at the bottom of page 12 on the lease.", 'ME');
@@ -2166,7 +2166,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderWorkspaceChat() {
     if (!chatMessagesBox) return;
     chatMessagesBox.innerHTML = '';
-    
+
     if (!state.activeConsultation || !state.activeConsultation.chat) return;
 
     const advocateText = state.workspaceData.lawyer ? state.workspaceData.lawyer.avatarText : 'SJ';
@@ -2174,10 +2174,10 @@ document.addEventListener('DOMContentLoaded', () => {
     state.activeConsultation.chat.forEach(msg => {
       const sender = msg.sender === 'client' ? 'sent' : 'received';
       const avatar = msg.sender === 'client' ? 'ME' : advocateText;
-      
+
       const msgWrapper = document.createElement('div');
       msgWrapper.className = `msg-wrapper ${sender}`;
-      
+
       const time = msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
       msgWrapper.innerHTML = `
@@ -2197,10 +2197,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!state.activeConsultation.chat) {
       state.activeConsultation.chat = [];
     }
-    
+
     const role = sender === 'sent' ? 'client' : 'lawyer';
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
     state.activeConsultation.chat.push({
       sender: role,
       text: text,
@@ -2249,7 +2249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Create lawyer reply trigger
     const advocateText = state.workspaceData.lawyer ? state.workspaceData.lawyer.avatarText : 'SJ';
-    
+
     // Simulate "typing..." element
     const typingBubble = document.createElement('div');
     typingBubble.className = 'msg-wrapper received typing-msg';
@@ -2311,7 +2311,7 @@ document.addEventListener('DOMContentLoaded', () => {
   docUploadDropzone.addEventListener('drop', (e) => {
     e.preventDefault();
     docUploadDropzone.classList.remove('dragover');
-    
+
     // Simulate random file upload
     const files = e.dataTransfer.files;
     if (files.length > 0) {
@@ -2356,7 +2356,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     uploadedFilesList.appendChild(fileDiv);
-    
+
     // Update count
     const totalCount = uploadedFilesList.querySelectorAll('.file-list-item').length;
     wsDocsCount.textContent = totalCount;
@@ -2395,7 +2395,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Show Auditor Panel
       auditFileName.textContent = data.fileName;
       auditScore.textContent = data.score;
-      
+
       // Select badge styling
       if (docType === 'lease') {
         auditScore.className = 'pill-tag text-rose';
@@ -2445,7 +2445,7 @@ document.addEventListener('DOMContentLoaded', () => {
     question.addEventListener('click', () => {
       const item = question.parentElement;
       const isOpen = item.classList.contains('open');
-      
+
       // Close all first
       document.querySelectorAll('.faq-item').forEach(i => {
         i.classList.remove('open');
@@ -2461,7 +2461,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==================== CLAUDE API AUDITOR & SEMANTIC FALLBACK ====================
   async function checkPlausibilityWithClaude(lawyer, queryText) {
     const apiKey = localStorage.getItem('ANTHROPIC_API_KEY') || '';
-    
+
     if (apiKey) {
       try {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2500,7 +2500,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await new Promise(resolve => setTimeout(resolve, 800));
 
     const q = queryText.toLowerCase();
-    
+
     // Check keywords overlap
     let match = false;
     let matchCount = 0;
@@ -2594,7 +2594,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const checkResult = await checkEnrolmentConsistencyWithClaude(name, stateCode, enrolment, exp);
-      
+
       const stampClass = checkResult.plausible ? 'match' : 'no-match';
       const stampText = checkResult.plausible ? 'SANITY CHECK PASSED' : 'CONSISTENCY CONFLICT';
 
@@ -2660,7 +2660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const userRoleEl = document.querySelector('.user-role');
         const statusTextEl = document.querySelector('.status-text');
         const statusIndicator = document.querySelector('.status-indicator');
-        
+
         userRoleEl.textContent = name;
         statusTextEl.textContent = `${city} • Pending Verification`;
         statusIndicator.className = 'status-indicator';
@@ -2703,7 +2703,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = false;
       } catch (err) {
         console.warn('Backend advocate registration failed, falling back to local session:', err);
-        
+
         const newLawyer = {
           id: name.toLowerCase().replace(/[^a-z]/g, '-'),
           name: name,
@@ -2736,7 +2736,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const userRoleEl = document.querySelector('.user-role');
         const statusTextEl = document.querySelector('.status-text');
         const statusIndicator = document.querySelector('.status-indicator');
-        
+
         userRoleEl.textContent = name;
         statusTextEl.textContent = `${city} • Pending Verification`;
         statusIndicator.className = 'status-indicator';
@@ -2788,7 +2788,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Claude Enrolment Consistency Sanity-Check
   async function checkEnrolmentConsistencyWithClaude(name, stateCode, enrolment, exp) {
     const apiKey = localStorage.getItem('ANTHROPIC_API_KEY') || '';
-    
+
     if (apiKey) {
       try {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2824,7 +2824,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Mock local verification logic
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     const parts = enrolment.split('/');
     const enrolmentYear = parseInt(parts[2]);
     const maxExp = 2026 - enrolmentYear;
@@ -2927,12 +2927,12 @@ document.addEventListener('DOMContentLoaded', () => {
           bSelect.appendChild(opt3);
         });
       }
-      
+
       // Update workspace layout for lawyer
       document.getElementById('workspace-empty-container').style.display = 'none';
       document.getElementById('workspace-active-container').style.display = 'none';
       document.getElementById('lawyer-caseload-container').style.display = 'grid';
-      
+
       renderLawyerCaseload();
     } else {
       // client
@@ -2969,7 +2969,7 @@ document.addEventListener('DOMContentLoaded', () => {
             price: '₹1,500',
             desc: 'Document audit and legal brief preparation.'
           };
-          
+
           // Render step roadmap
           const steps = [
             { label: 'Demand Letter Sent', date: 'Completed', status: 'complete' },
@@ -3072,7 +3072,7 @@ document.addEventListener('DOMContentLoaded', () => {
       item.style.transition = 'all 0.2s ease';
       item.style.marginBottom = '8px';
       item.style.borderRadius = '0px'; // file folder look
-      
+
       item.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
           <strong style="font-size:13px; color:white;">${client.name}</strong>
@@ -3093,27 +3093,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         item.style.borderColor = 'var(--color-thread)';
         item.style.background = 'rgba(178, 94, 56, 0.05)';
-        
+
         loadActiveClientDetail(client);
       });
 
       listContainer.appendChild(item);
     });
-    
+
     lucide.createIcons();
   }
 
   function loadActiveClientDetail(client) {
     const detailPanel = document.getElementById('lawyer-active-client-detail');
     if (!detailPanel) return;
-    
+
     // Render chat messages
     let chatHTML = '';
     client.chat.forEach(msg => {
       const isLawyer = msg.sender === 'lawyer' || msg.sender === 'system';
       const senderClass = isLawyer ? 'message-lawyer' : 'message-client';
       const senderName = msg.sender === 'lawyer' ? 'You' : msg.sender === 'system' ? 'Aequitas System' : client.name;
-      
+
       chatHTML += `
         <div class="chat-message ${senderClass}">
           <div class="message-meta">${senderName}</div>
@@ -3191,10 +3191,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Add to array
       client.chat.push({ sender: 'lawyer', text: text });
-      
+
       // Reload UI
       loadActiveClientDetail(client);
-      
+
       // Scroll to bottom
       const box = document.getElementById('lawyer-client-chat-box');
       box.scrollTop = box.scrollHeight;
@@ -3272,7 +3272,7 @@ document.addEventListener('DOMContentLoaded', () => {
           b.style.borderColor = 'transparent';
           b.style.color = 'var(--text-secondary)';
         });
-        
+
         btn.classList.add('active');
         btn.style.background = 'rgba(255,255,255,0.03)';
         btn.style.borderColor = 'var(--color-thread)';
@@ -3293,16 +3293,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const clientVal = document.getElementById('vakalatnama-client').value;
         const courtVal = document.getElementById('vakalatnama-court').value;
         const caseNumVal = document.getElementById('vakalatnama-case-num').value;
-        
+
         // Update Preview
         document.getElementById('preview-val-client-name').textContent = clientVal;
         document.getElementById('preview-val-court').textContent = courtVal;
         document.getElementById('preview-val-case').textContent = caseNumVal;
-        
+
         const lawyerName = state.userProfile ? state.userProfile.name : 'Sarah Jenkins, Esq.';
         const lawyerNameEls = document.querySelectorAll('.preview-val-lawyer-name');
         lawyerNameEls.forEach(el => el.textContent = lawyerName);
-        
+
         alert('Vakalatnama generated and signed successfully! Print view updated.');
       });
     }
@@ -3493,7 +3493,7 @@ Advocate for Plaintiff`,
           b.style.borderColor = 'transparent';
           b.style.color = 'var(--text-secondary)';
         });
-        
+
         btn.classList.add('active');
         btn.style.background = 'rgba(255,255,255,0.03)';
         btn.style.borderColor = 'var(--color-thread)';
@@ -3501,7 +3501,7 @@ Advocate for Plaintiff`,
 
         const idx = parseInt(btn.getAttribute('data-draft-idx'));
         const template = draftTemplates[idx];
-        
+
         selectedTitle.textContent = template.title;
         editor.value = template.text.replace('[Lawyer Name]', state.userProfile ? state.userProfile.name : 'Sarah Jenkins, Esq.');
         precedentsList.innerHTML = template.precedents;
@@ -3567,6 +3567,12 @@ Advocate for Plaintiff`,
     try {
       const userProfile = JSON.parse(savedUserProfile);
       restoreUserSession(savedUserType, userProfile);
+      // Force restore after refresh
+      onboardingOverlay.style.display = 'none';
+      updateNavForUserRole();
+      switchTab('workspace');
+      lucide.createIcons();
+      checkDigiLockerLock();
     } catch (err) {
       console.error("Failed to restore session:", err);
       localStorage.removeItem('AEQUITAS_USER_TYPE');
@@ -3579,7 +3585,7 @@ Advocate for Plaintiff`,
   const btnDigilockerVerify = document.getElementById('btn-digilocker-verify');
   const verifyLockBarId = document.getElementById('verify-lock-bar-id');
 
-  window.checkDigiLockerLock = function() {
+  window.checkDigiLockerLock = function () {
     if (state.userType === 'lawyer' && state.userProfile && state.userProfile.verificationStatus !== 'verified') {
       if (digilockerLockScreen) {
         digilockerLockScreen.style.display = 'flex';
@@ -3622,7 +3628,7 @@ Advocate for Plaintiff`,
         }
 
         alert('Identity verified successfully! Welcome to your dashboard.');
-        
+
         // Update local state
         state.userProfile.verificationStatus = 'verified';
         state.userProfile.barCouncilId = barId;
@@ -3711,7 +3717,7 @@ Advocate for Plaintiff`,
     document.getElementById('settings-name-shared').value = state.userProfile.name || '';
     document.getElementById('settings-city-shared').value = state.userProfile.city || '';
     document.getElementById('settings-contact-shared').value = state.userProfile.contactInfo || state.userProfile.contact || '';
-    
+
     if (state.userType === 'lawyer') {
       document.getElementById('lawyer-only-settings').style.display = 'block';
       document.getElementById('client-only-settings').style.display = 'none';
@@ -3733,7 +3739,7 @@ Advocate for Plaintiff`,
   const btnAcademyUnderstood = document.getElementById('btn-academy-understood');
   const academyModalTitle = document.getElementById('academy-modal-title');
   const academyModalContent = document.getElementById('academy-modal-content');
-  
+
   const academyMockContent = {
     'deposit': { title: 'Security Deposit Recovery', content: '<p>Under the Rent Control Act and general tenancy agreements, a landlord is required to return the security deposit within 30 days of you vacating the premises, minus any legitimate deductions for unpaid rent or major damages.</p><p><b>Steps to take:</b><ol><li>Review your lease agreement.</li><li>Send a formal written notice or email requesting the return.</li><li>If ignored, you may send a legal notice or approach a small claims or rent controller court.</li></ol></p>' },
     'repairs': { title: 'Landlord Refusing Repairs?', content: '<p>The landlord has a statutory duty to keep the premises in a habitable condition. This includes structural repairs, plumbing, and electrical faults.</p><p>If they refuse, you generally have the right to carry out minor repairs yourself and deduct the cost from the rent, provided you have given 14-30 days written notice and kept all receipts. Major structural issues may require approaching the local rent controller.</p>' },
@@ -3773,7 +3779,7 @@ Advocate for Plaintiff`,
 
   if (btnCloseAcademyModal) btnCloseAcademyModal.addEventListener('click', closeAcademyModal);
   if (btnAcademyUnderstood) btnAcademyUnderstood.addEventListener('click', closeAcademyModal);
-  
+
   if (academyModal) {
     academyModal.addEventListener('click', (e) => {
       if (e.target === academyModal) closeAcademyModal();
