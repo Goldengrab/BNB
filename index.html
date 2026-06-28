@@ -458,10 +458,36 @@
           <div class="glass-card analyzer-input-card">
             <h3>Describe What Happened</h3>
             <p class="subtitle">Avoid legal jargon. Just tell us the story, date, and key events.</p>
-            
+
+            <!-- City + Budget row -->
+            <div style="display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 140px;">
+                <label for="analyzer-city" style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Your City</label>
+                <input type="text" id="analyzer-city" placeholder="e.g. Mumbai, Delhi…" maxlength="100"
+                  style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box;" />
+              </div>
+              <div style="flex: 1; min-width: 140px;">
+                <label for="analyzer-budget" style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Budget</label>
+                <select id="analyzer-budget"
+                  style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box; cursor: pointer;">
+                  <option value="">Not specified</option>
+                  <option value="Budget-friendly">Budget-friendly</option>
+                  <option value="Mid-range">Mid-range</option>
+                  <option value="Premium">Premium</option>
+                  <option value="No constraint">No constraint</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- PII disclaimer -->
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5; font-style: italic;">
+              <i data-lucide="shield" style="width:11px; height:11px; display:inline-block; vertical-align:middle; margin-right:3px;"></i>
+              Don't enter real names, ID numbers, or other identifying details — this is a hackathon demo, not a confidential legal consultation. Case details are sent to an AI model for this session only and are not stored.
+            </p>
+
             <div class="textarea-wrapper">
-              <textarea id="case-description-input" placeholder="E.g., My landlord is refusing to return my security deposit of ₹15,000. The lease ended on June 1st. He says it's for cleaning a scratch on the kitchen cabinet, but the scratch was there when I moved in. He is not answering my calls..."></textarea>
-              <div class="character-count"><span id="char-count">0</span> characters</div>
+              <textarea id="case-description-input" maxlength="2000" placeholder="E.g., My landlord is refusing to return my security deposit of ₹15,000. The lease ended on June 1st. He says it's for cleaning a scratch on the kitchen cabinet, but the scratch was there when I moved in. He is not answering my calls..."></textarea>
+              <div class="character-count"><span id="char-count">0</span> / 2000</div>
             </div>
 
             <!-- Example Suggestions -->

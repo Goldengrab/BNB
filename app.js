@@ -1490,19 +1490,35 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==================== CASE ANALYZER LOGIC ====================
-  btnRunAnalysis.addEventListener('click', () => {
+  btnRunAnalysis.addEventListener('click', async () => {
     const description = caseInput.value.trim();
     if (!description) {
       alert('Please describe your legal situation before running the audit.');
       return;
     }
+    if (description.length > 2000) {
+      alert('Case description must be under 2000 characters.');
+      return;
+    }
+
+    // Read city + budget fields
+    const cityEl = document.getElementById('analyzer-city');
+    const budgetEl = document.getElementById('analyzer-budget');
+    const city = cityEl ? cityEl.value.trim().substring(0, 100) : '';
+    const budget = budgetEl ? budgetEl.value.substring(0, 100) : '';
+
+    // Disable button while processing
+    btnRunAnalysis.disabled = true;
+    const originalBtnHTML = btnRunAnalysis.innerHTML;
+    btnRunAnalysis.innerHTML = '<i data-lucide="loader"></i> Analyzing…';
+    lucide.createIcons();
 
     // Trigger loading UI
     analyzerInitialState.style.display = 'none';
     analyzerSuccessState.style.display = 'none';
     analyzerLoadingState.style.display = 'flex';
 
-    // Steps timing script
+    // Animate loading steps
     const steps = [
       { id: 'step-1', text: 'Parsing statement & compiling entities...', delay: 0 },
       { id: 'step-2', text: 'Classifying domain, legal remedies & jurisdiction...', delay: 800 },
@@ -1513,8 +1529,6 @@ document.addEventListener('DOMContentLoaded', () => {
     steps.forEach((step, index) => {
       setTimeout(() => {
         loadingStatusText.textContent = step.text;
-
-        // Update check icons in steps
         const stepEl = document.getElementById(step.id);
         if (stepEl) {
           stepEl.classList.add('active');
@@ -1528,22 +1542,47 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
         }
-
-        // Final Resolution
         if (index === steps.length - 1) {
-          setTimeout(() => {
-            const finalEl = document.getElementById(step.id);
-            if (finalEl) {
-              finalEl.classList.remove('active');
-              finalEl.classList.add('complete');
-              finalEl.innerHTML = '<i data-lucide="check-circle-2" class="text-emerald"></i> ' + finalEl.textContent.trim();
-              lucide.createIcons({ attrs: { class: 'text-emerald' } });
-            }
-            generateAnalysisReport(description);
-          }, 800);
+          const finalEl = document.getElementById(step.id);
+          if (finalEl) {
+            finalEl.classList.remove('active');
+            finalEl.classList.add('complete');
+            finalEl.innerHTML = '<i data-lucide="check-circle-2" class="text-emerald"></i> ' + finalEl.textContent.trim();
+            lucide.createIcons({ attrs: { class: 'text-emerald' } });
+          }
         }
       }, step.delay);
     });
+
+    // Call the secure backend proxy
+    try {
+      const response = await fetch('/api/analyze-case', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ caseText: description, budget, urgency: '', city })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Analysis failed. Please try again.');
+      }
+
+      // Render results using the response
+      renderAnalysisReport(data, city, budget);
+
+    } catch (err) {
+      analyzerLoadingState.style.display = 'none';
+      analyzerInitialState.style.display = 'flex';
+      alert(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      // 5-second cooldown to prevent abuse
+      setTimeout(() => {
+        btnRunAnalysis.disabled = false;
+        btnRunAnalysis.innerHTML = originalBtnHTML;
+        lucide.createIcons();
+      }, 5000);
+    }
   });
 
   function generateAnalysisReport(inputText) {
@@ -1798,6 +1837,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show filter tag for lawyers
     activeCaseCategoryName.textContent = analysis.category.split(' ')[0];
+    activeCaseFilterTag.style.display = 'flex';
+  }
+
+  // ==================== RENDER FROM API RESPONSE ====================
+  // Called with the JSON returned by /api/analyze-case (real or fallback)
+  function renderAnalysisReport(analysis, city, budget) {
+    // Count matching lawyers for this category
+    const matchingLawyerCount = LAWYERS_DATABASE.filter(l => l.specialty === analysis.filterTag).length;
+    const advocateCountEl = document.getElementById('matchmaker-advocate-count');
+    if (advocateCountEl) {
+      let msg = matchingLawyerCount > 0
+        ? `We found ${matchingLawyerCount} pre-vetted advocate${matchingLawyerCount > 1 ? 's' : ''} specializing in ${analysis.category}.`
+        : `We are matching you to our best available advocates for ${analysis.category}.`;
+      if (city) msg += ` (${city} area)`;
+      if (analysis.matchNote) msg = analysis.matchNote;
+      advocateCountEl.textContent = msg;
+    }
+
+    // Set state
+    state.isCaseAnalyzed = true;
+    state.analyzedCategory = analysis.filterTag;
+    state.analyzedData = analysis;
+
+    // Render results
+    resCaseCategory.textContent = analysis.category;
+    resCaseCategory.className = `pill-tag text-accent ${analysis.filterTag}`;
+    resCaseTitle.textContent = analysis.title;
+
+    // Viability circle computation
+    const viability = Number(analysis.viability) || 70;
+    const radius = 32;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (viability / 100) * circumference;
+    resViabilityCircle.style.strokeDashoffset = strokeDashoffset;
+    resViabilityCircle.style.stroke = viability >= 75 ? '#10b981' : (viability >= 60 ? '#f59e0b' : '#f43f5e');
+    resViabilityPercent.textContent = `${viability}%`;
+
+    resClaimValue.textContent = analysis.claimValue;
+    resActionability.textContent = analysis.actionability;
+    resActionability.className = `value ${viability >= 75 ? 'text-emerald' : 'text-cyan'}`;
+    resFilingCosts.textContent = analysis.filingCosts;
+    resNarrative.textContent = analysis.narrative;
+
+    // Next steps checklist
+    resStepsList.innerHTML = '';
+    (analysis.steps || []).forEach((step, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <i data-lucide="check-square" class="text-emerald"></i>
+        <div>
+          <strong>Step ${i + 1}:</strong> ${step}
+        </div>
+      `;
+      resStepsList.appendChild(li);
+    });
+
+    lucide.createIcons();
+
+    // Show result dashboard
+    analyzerLoadingState.style.display = 'none';
+    analyzerSuccessState.style.display = 'block';
+
+    // Show filter tag for lawyers
+    activeCaseCategoryName.textContent = (analysis.category || '').split(' ')[0];
     activeCaseFilterTag.style.display = 'flex';
   }
 
