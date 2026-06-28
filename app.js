@@ -1461,6 +1461,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabId === 'matchmaker') {
       renderLawyers();
     }
+    if (tabId === 'settings') {
+      populateSettingsForm();
+    }
   }
 
   // Bind tab clicks
