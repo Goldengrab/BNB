@@ -2422,7 +2422,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  bookingForm.addEventListener('submit', (e) => {
+  bookingForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const lawyer = state.selectedLawyer;
@@ -2439,8 +2439,28 @@ document.addEventListener('DOMContentLoaded', () => {
     state.activeConsultation = {
       brief: notes || `${lawyer.specialtyLabel} Consultation Request`,
       date: dateVal,
-      mode: modeVal
+      mode: modeVal,
+      clientName: state.userProfile ? state.userProfile.name : 'Demo Client',
+      lawyerId: lawyer.id
     };
+    
+    // Save to Turso Database via API
+    try {
+      await fetch(`${API_BASE}/api/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lawyerId: lawyer.id,
+          clientId: state.userProfile ? state.userProfile.id : 'client-demo',
+          clientName: state.activeConsultation.clientName,
+          brief: state.activeConsultation.brief,
+          date: state.activeConsultation.date,
+          mode: state.activeConsultation.mode
+        })
+      });
+    } catch (err) {
+      console.error("Failed to save booking to database", err);
+    }
 
     // Set Workspace variables
     state.isWorkspaceInitialized = true;
@@ -3703,14 +3723,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function renderLawyerCaseload() {
+  async function renderLawyerCaseload() {
     const listContainer = document.getElementById('lawyer-client-list');
     if (!listContainer) return;
     listContainer.innerHTML = '';
 
     // Merge dynamic active consultations if matching this lawyer
     const activeClientsList = [...caseloadClients];
-    if (state.activeConsultation) {
+    
+    // Fetch bookings from Turso Database
+    if (state.userProfile && state.userProfile.id) {
+      try {
+        const res = await fetch(`${API_BASE}/api/bookings/${state.userProfile.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.bookings && data.bookings.length > 0) {
+            data.bookings.forEach((booking, idx) => {
+              activeClientsList.unshift({
+                id: `client-db-${booking.id}`,
+                name: booking.client_name || 'New Client Booking',
+                issue: booking.brief,
+                description: booking.brief,
+                date: booking.date,
+                mode: booking.mode,
+                status: booking.status || 'New Inquiry',
+                docs: [
+                  { name: 'CaseSummary.pdf', size: '1.2 MB', scanned: false }
+                ],
+                chat: [
+                  { sender: 'client', text: `Hi, I booked you for: "${booking.brief}". Let's discuss.` }
+                ]
+              });
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch bookings from DB:", err);
+      }
+    }
+
+    // Try to load booking from localStorage for fallback demo persistence
+    const savedBooking = localStorage.getItem('AEQUITAS_MOCK_BOOKING');
+    if (savedBooking && !state.activeConsultation) {
+      try {
+        state.activeConsultation = JSON.parse(savedBooking);
+      } catch (e) {}
+    }
+
+    if (state.activeConsultation && (!state.activeConsultation.lawyerId || state.activeConsultation.lawyerId == state.userProfile.id)) {
       const matchExists = activeClientsList.some(c => c.id === 'client-current-user');
       if (!matchExists) {
         if (!state.activeConsultation.chat) {
@@ -3720,14 +3780,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         activeClientsList.unshift({
           id: 'client-current-user',
-          name: state.userProfile ? state.userProfile.name : 'You (Demo Client Booking)',
+          name: state.activeConsultation.clientName || 'New Client Booking',
           issue: state.activeConsultation.brief,
           description: state.activeConsultation.brief,
           date: state.activeConsultation.date,
           mode: state.activeConsultation.mode,
           status: 'New Inquiry',
           docs: [
-            { name: 'LeaseAgreement.pdf', size: '1.2 MB', scanned: false }
+            { name: 'CaseSummary.pdf', size: '1.2 MB', scanned: false }
           ],
           chat: state.activeConsultation.chat
         });

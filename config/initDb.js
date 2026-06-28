@@ -200,7 +200,7 @@ export async function initDb() {
   try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_lawyers_contact ON lawyers(contact_info)`); } catch(e) { console.warn("Failed to create idx_lawyers_contact:", e.message); }
 
   // Create clients table
-  await db.execute(`
+    await db.execute(`
     CREATE TABLE IF NOT EXISTS clients (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -210,8 +210,24 @@ export async function initDb() {
       interest TEXT NOT NULL,
       password TEXT,
       is_profile_completed INTEGER NOT NULL DEFAULT 0
-    )
-  `);
+    )`);
+    console.log("Clients table created");
+
+    await db.execute(`
+    CREATE TABLE IF NOT EXISTS bookings (
+      id TEXT PRIMARY KEY,
+      lawyer_id TEXT NOT NULL,
+      client_id TEXT NOT NULL,
+      client_name TEXT NOT NULL,
+      brief TEXT,
+      date TEXT,
+      mode TEXT,
+      status TEXT DEFAULT 'New Inquiry',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (lawyer_id) REFERENCES lawyers(id),
+      FOREIGN KEY (client_id) REFERENCES clients(id)
+    )`);
+    console.log("Bookings table created");
 
   // Add password column to existing clients table if it doesn't exist (migration)
   try { await db.execute(`ALTER TABLE clients ADD COLUMN password TEXT`); } catch(_) {}
