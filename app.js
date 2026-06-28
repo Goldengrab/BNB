@@ -4379,7 +4379,10 @@ Advocate for Plaintiff`,
             exp: document.getElementById('settings-lawyer-exp').value,
             fought: document.getElementById('settings-lawyer-fought').value,
             won: document.getElementById('settings-lawyer-won').value,
-            bio: document.getElementById('settings-lawyer-bio').value
+            bio: document.getElementById('settings-lawyer-bio').value,
+            bar_council_id: document.getElementById('settings-bar-council-id').value,
+            bar_number: document.getElementById('settings-lawyer-enrolment').value,
+            state_bar_council: document.getElementById('settings-lawyer-state').value
           };
         } else {
           endpoint = `${API_BASE}/api/clients/${state.userProfile.id}`;
@@ -4438,6 +4441,9 @@ Advocate for Plaintiff`,
       document.getElementById('settings-lawyer-fought').value = state.userProfile.casesHandled || 0;
       document.getElementById('settings-lawyer-won').value = state.userProfile.casesWon || parseInt((state.userProfile.winRate || '0%').replace('%', '')) || 0;
       document.getElementById('settings-lawyer-bio').value = state.userProfile.bio || '';
+      document.getElementById('settings-lawyer-state').value = state.userProfile.state_bar_council || '';
+      document.getElementById('settings-lawyer-enrolment').value = state.userProfile.bar_number || '';
+      document.getElementById('settings-bar-council-id').value = state.userProfile.bar_council_id || '';
     } else {
       document.getElementById('lawyer-only-settings').style.display = 'none';
       document.getElementById('client-only-settings').style.display = 'block';

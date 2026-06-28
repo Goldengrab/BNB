@@ -62,11 +62,6 @@
           </div>
           <button type="submit" class="btn btn-primary w-full btn-large">Get Verification Code</button>
         </form>
-        <div style="margin-top: 16px; text-align: center; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 12px;">
-          <a href="#" id="link-go-to-advocate-signup" style="font-size: 12px; color: var(--color-thread-light); text-decoration: none; font-weight: 500; font-family: var(--font-mono); display: inline-flex; align-items: center; gap: 4px;">
-            <i data-lucide="shield" style="width: 14px; height: 14px;"></i> Are you a lawyer? List your practice →
-          </a>
-        </div>
       </div>
 
       <!-- STEP 1B: ADVOCATE OFFICIAL SIGNUP -->
@@ -1370,6 +1365,39 @@ Advocate [Lawyer Name]
                       <label for="settings-lawyer-won">Cases Won</label>
                       <input type="number" id="settings-lawyer-won" placeholder="E.g. 104" min="0">
                     </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                      <label for="settings-lawyer-state">State Bar Council</label>
+                      <select id="settings-lawyer-state">
+                        <option value="" disabled selected>Select State</option>
+                        <option value="MAH">Maharashtra (MAH)</option>
+                        <option value="D">Delhi (D)</option>
+                        <option value="UP">Uttar Pradesh (UP)</option>
+                        <option value="WB">West Bengal (WB)</option>
+                        <option value="KA">Karnataka (KA)</option>
+                        <option value="TN">Tamil Nadu (TN)</option>
+                        <option value="GJ">Gujarat (GJ)</option>
+                      </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                      <label for="settings-lawyer-enrolment">Bar Enrolment Number</label>
+                      <input type="text" id="settings-lawyer-enrolment" placeholder="E.g., MAH/1234/2015">
+                    </div>
+                  </div>
+                  <div style="background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.25); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <i data-lucide="shield-check" style="width:16px;height:16px;color:var(--accent-indigo);"></i>
+                      <span style="font-size:12px;font-weight:600;color:var(--accent-indigo);font-family:var(--font-mono);">Bar Council ID / DigiLocker Verification</span>
+                      <span style="margin-left:auto;background:rgba(234,179,8,0.15);color:#eab308;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:var(--font-mono);">⏳ PENDING</span>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label for="settings-bar-council-id" style="font-size:11px;">Bar Council ID / DigiLocker Document ID</label>
+                      <input type="text" id="settings-bar-council-id" placeholder="E.g., BC-MAH-2015-12345 or DigiLocker Doc ID">
+                    </div>
+                    <p style="font-size:10px;color:var(--text-muted);margin-top:8px;margin-bottom:0;line-height:1.4;">
+                      Your profile will remain <strong style="color:#eab308;">Pending Verification</strong> until approved — usually within 2–3 business days.
+                    </p>
                   </div>
                   <div class="form-group">
                     <label for="settings-lawyer-bio">Professional Bio <span style="font-size:10px;color:var(--text-muted);">(shown on your public profile)</span></label>
