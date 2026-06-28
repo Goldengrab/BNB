@@ -1481,75 +1481,209 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function generateAnalysisReport(inputText) {
     const text = inputText.toLowerCase();
-    let analysis = {
-      category: 'Civil Dispute',
-      title: 'Contract / Mutual Dispute',
-      viability: 65,
-      viabilityOffset: 221, // math calculation of stroke-dashoffset
-      claimValue: '₹12,000',
-      actionability: 'Moderate',
-      filingCosts: '₹750 - ₹1,500',
-      narrative: 'Based on your description, this dispute involves a general breach of mutual obligations. Since you have documentation, a breach of contract claim is viable. We advise requesting voluntary mediation before pursuing small claims actions.',
-      steps: [
-        'Collect all contract documents and communications in a secure folder.',
-        'Send a formal settlement offer detailing the terms breached.',
-        'If negotiation fails, draft a Small Claims summons.'
-      ],
-      filterTag: 'contract'
-    };
 
-    // Keyword Routing
-    if (text.includes('landlord') || text.includes('tenant') || text.includes('deposit') || text.includes('rent') || text.includes('lease') || text.includes('apartment') || text.includes('roommate')) {
-      analysis = {
+    // ── Helper: count how many of these keywords appear ──────────────────
+    const hits = (keywords) => keywords.filter(k => text.includes(k)).length;
+
+    // ── CASE PROFILES ────────────────────────────────────────────────────
+    const caseProfiles = [
+      {
+        id: 'tenancy',
+        filterTag: 'tenancy',
+        keywords: ['landlord', 'tenant', 'deposit', 'security deposit', 'rent', 'lease', 'apartment',
+                   'roommate', 'eviction', 'lockout', 'maintenance', 'repair', 'flat', 'pg',
+                   'makan malik', 'kiraya', 'ghar', 'zameen', 'makaan', 'bahar nikala', 'house'],
         category: 'Tenancy & Real Estate',
-        title: 'Security Deposit & Tenancy Dispute',
+        title: 'Tenancy, Deposit or Housing Dispute',
         viability: 82,
-        viabilityColor: '#10b981',
-        claimValue: '₹15,000 - ₹30,000',
         actionability: 'Strong',
-        filingCosts: '₹450 - ₹900',
-        narrative: 'Your landlord is legally required to return your security deposit within a strict statutory deadline (often 21 days) or provide an itemized list of deductions. Normal wear and tear (like light cabinet scratches) cannot be deducted. You have a very strong case if photos confirm the condition.',
+        claimValue: '₹15,000 – ₹50,000',
+        filingCosts: '₹450 – ₹900 (Rent Controller)',
+        narrative: 'Under the Rent Control Act and general tenancy law, a landlord cannot withhold your security deposit without providing a written, itemized breakdown of deductions within the statutory deadline (usually 21–30 days). Deductions for normal wear-and-tear (e.g., minor wall marks, cabinet scratches) are legally invalid. Illegal lockouts without a court order are a criminal offence (IPC §448). Based on your description, you have a strong claim if you have photographs, messages, or the original lease agreement.',
         steps: [
-          'Send a certified Tenant Demand Letter requesting full refund of deposit.',
-          'Compile move-in inspection reports and dated photos.',
-          'Request a formal pre-moveout inspection audit if relevant.'
-        ],
-        filterTag: 'tenancy'
-      };
-    } else if (text.includes('wage') || text.includes('freelance') || text.includes('invoice') || text.includes('unpaid') || text.includes('client') || text.includes('designer') || text.includes('contractor') || text.includes('payment') || text.includes('pay')) {
-      analysis = {
+          'Send a Tenant Demand Letter via registered post or email with read-receipt, citing the specific clause breached.',
+          'Compile all move-in/move-out photographs, WhatsApp/email threads, and rent receipts into one folder.',
+          'File a complaint with the local Rent Controller or Civil Court if no response within 15 days.',
+          'Consider filing an FIR under IPC §448 if locks were changed without a court order.',
+          'Connect with a Tenancy Law advocate through the Matchmaker to send a formal legal notice (₹500–₹1,500).'
+        ]
+      },
+      {
+        id: 'employment',
+        filterTag: 'employment',
+        keywords: ['wage', 'salary', 'freelance', 'invoice', 'unpaid', 'contractor', 'designer',
+                   'payment', 'job', 'fired', 'terminated', 'employer', 'notice period', 'gratuity',
+                   'pf', 'provident fund', 'overtime', 'naukri', 'paisa nahi', 'boss', 'kaam', 'baki'],
         category: 'Employment & Labor Law',
-        title: 'Unpaid Wages & Breach of Service Contract',
-        viability: 75,
-        viabilityColor: '#10b981',
-        claimValue: '₹32,000 - ₹50,000',
+        title: 'Unpaid Wages, Freelance Invoice or Wrongful Termination',
+        viability: 78,
         actionability: 'Strong',
-        filingCosts: '₹500 - ₹1,100',
-        narrative: 'Freelance agreements and employment contracts are fully enforceable. If services were rendered and accepted, withholding payment is a breach. Many jurisdictions impose prompt payment penalties on clients who stall freelance invoices.',
+        claimValue: '₹20,000 – ₹1,50,000',
+        filingCosts: '₹0 – ₹600 (Labour Commissioner is free)',
+        narrative: 'Freelance agreements and employment contracts are legally enforceable documents. If services were rendered and accepted, withholding payment is a clear breach of contract (Indian Contract Act §73). For salaried employees, wrongful termination without the contractual notice period or severance is actionable under the Industrial Disputes Act. The Labour Commissioner can be approached at zero filing cost for salary disputes, and the MSME Samadhaan portal provides interest on delayed payments for MSME clients.',
         steps: [
-          'Send a formal "Letter of Intent to Sue" giving 7 business days to pay.',
-          'Export PDF copies of your signed contract, emails approving work, and sent invoices.',
-          'File an administrative wage claim with the state Department of Labor.'
-        ],
-        filterTag: 'employment'
-      };
-    } else if (text.includes('car') || text.includes('dealer') || text.includes('warranty') || text.includes('failed') || text.includes('lemon') || text.includes('repair') || text.includes('buy')) {
-      analysis = {
+          'Send a formal "Letter of Intent to Sue" by registered post giving the employer/client 7 business days to settle.',
+          'Export PDFs of your signed contract, all approval emails, and submitted invoices.',
+          'File an online complaint on MSME Samadhaan (msme.gov.in) if the debtor is a registered MSME.',
+          'File a wage claim with the local Labour Commissioner (no fee required).',
+          'If above ₹50,000, file a summary suit under Order 37 CPC in the Civil Court.'
+        ]
+      },
+      {
+        id: 'consumer',
+        filterTag: 'consumer',
+        keywords: ['car', 'vehicle', 'dealer', 'warranty', 'lemon', 'defective', 'product', 'refund',
+                   'online', 'amazon', 'flipkart', 'shopping', 'ecommerce', 'fraud', 'returned', 'replace',
+                   'subscription', 'service', 'restaurant', 'hospital', 'bill', 'overcharged', 'deficiency',
+                   'cheating', 'dhoka', 'saman', 'kharab', 'product kharab', 'nahi mila', 'scam'],
         category: 'Consumer Protection',
-        title: 'Used Car / Lemon Law Warranty Conflict',
-        viability: 58,
-        viabilityColor: '#f59e0b',
-        claimValue: '₹35,000 - ₹75,000',
-        actionability: 'Moderate',
-        filingCosts: '₹1,200 - ₹2,200',
-        narrative: 'Used car warranty claims depend heavily on the written warranty agreement ("As-Is" vs Certified Guarantee). Verbal promises during sales are notoriously hard to prove in court, but dealer failure to disclose known major defects (fraud) is actionable.',
+        title: 'Consumer Fraud, Product Defect or Service Deficiency',
+        viability: 70,
+        actionability: 'Moderate–Strong',
+        claimValue: '₹10,000 – ₹2,00,000',
+        filingCosts: '₹200 – ₹1,000 (Consumer Forum)',
+        narrative: 'The Consumer Protection Act 2019 is one of India\'s strongest pieces of legislation for ordinary citizens. Complaints can be filed online at edaakhil.nic.in for free (up to ₹5 lakh claims). You are entitled to replacement/refund AND compensation for mental agony. E-commerce companies like Amazon/Flipkart are now directly liable under the Act. Verbal warranties during a sale can be proven through WhatsApp screenshots or call recordings (legal to record in India).',
         steps: [
-          'Obtain an independent mechanic inspection documenting the cause of transmission failure.',
-          'Send dealer a formal certified letter citing state consumer warranty statutes.',
-          'File complaints with the State Attorney General and DMV Licensing Board.'
-        ],
-        filterTag: 'consumer'
-      };
+          'File a complaint on the National Consumer Helpline (NCH): Call 1800-11-4000 or use consumerhelpline.gov.in for immediate escalation.',
+          'File an online consumer complaint at edaakhil.nic.in (District Commission handles claims up to ₹50 lakh).',
+          'Preserve screenshots of product listings, delivery confirmations, chat logs, and the original invoice.',
+          'Send a formal Notice to the company via their Grievance Officer (required by law to respond within 48 hrs for e-commerce).',
+          'If a vehicle defect, get an independent inspection report from an authorized service centre documenting the fault.'
+        ]
+      },
+      {
+        id: 'family',
+        filterTag: 'family',
+        keywords: ['divorce', 'wife', 'husband', 'marriage', 'matrimonial', 'alimony', 'maintenance',
+                   'custody', 'child', 'dowry', 'domestic violence', 'dv', 'talaaq', 'talak', 'separation',
+                   'cheating', 'affair', 'desertion', 'cruelty', 'harassment', 'shadi', 'pati', 'patni',
+                   'bachche', 'dahej', 'ghar se nikala'],
+        category: 'Family Law & Matrimonial',
+        title: 'Matrimonial Dispute, Divorce or Domestic Violence',
+        viability: 72,
+        actionability: 'Moderate',
+        claimValue: 'Maintenance + Alimony (Case Specific)',
+        filingCosts: '₹500 – ₹2,500 (Family Court)',
+        narrative: 'Family disputes are handled by dedicated Family Courts and are governed by personal law (Hindu Marriage Act, Special Marriage Act, Muslim Personal Law, etc.). For domestic violence cases, the Protection of Women from Domestic Violence Act 2005 provides fast-track relief including a Protection Order, Residence Order, and Maintenance Order — all within days if needed. Dowry harassment is a cognizable offence under IPC §498A, which is a non-bailable and non-compoundable crime.',
+        steps: [
+          'If facing physical violence or immediate danger, call 100 (Police) or 181 (Women Helpline) immediately.',
+          'File a complaint under the DV Act with the Protection Officer at your local District Court — no lawyer needed initially.',
+          'For divorce, file a petition in the Family Court of the district where you last resided together.',
+          'Preserve all communications (texts, emails, call logs), medical reports if any, and witness contact details.',
+          'For child custody, document your parenting routine and capacity. Courts prioritize the "best interest of the child".'
+        ]
+      },
+      {
+        id: 'criminal',
+        filterTag: 'criminal',
+        keywords: ['fir', 'police', 'theft', 'robbery', 'assault', 'attack', 'beat', 'hit',
+                   'mara', 'maar', 'peeta', 'chori', 'dakaiti', 'fraud', 'criminal', 'bail', 'arrested',
+                   'chargesheet', 'accused', 'complaint', 'murder', 'threat', 'dhaki', 'dhamki',
+                   'blackmail', 'extortion', 'abduction', 'kidnap'],
+        category: 'Criminal Law',
+        title: 'Criminal Complaint, FIR or Defence',
+        viability: 68,
+        actionability: 'Urgent – Act Immediately',
+        claimValue: 'Criminal Prosecution (No monetary claim)',
+        filingCosts: '₹0 (FIR Filing) – ₹5,000+ (Legal Defence)',
+        narrative: 'Filing an FIR is your constitutional right (Section 154 CrPC) — police cannot legally refuse to register it for cognizable offences like theft, assault, or fraud. If police refuse, you can file a complaint directly to the Superintendent of Police (SP) or use the online portal at your state\'s police website. For bail matters, a criminal lawyer needs to be engaged immediately. Courts must hear bail applications within 24 hours of arrest.',
+        steps: [
+          'File an FIR at the nearest police station. If refused, file a complaint to the SP or at the Judicial Magistrate\'s court directly.',
+          'Note the FIR number and get a copy — this is your legal right and it is free.',
+          'Preserve all evidence: CCTV footage, witnesses, messages, photos of injuries or damaged property.',
+          'If arrested: you have the right to inform one person of your choice and to consult a lawyer before interrogation.',
+          'Engage a criminal defence lawyer immediately if accused; approach Legal Aid Services if you cannot afford one (free under Sec 12 Legal Services Authority Act).'
+        ]
+      },
+      {
+        id: 'property',
+        filterTag: 'contract',
+        keywords: ['property', 'land', 'plot', 'zameen', 'registry', 'sale deed', 'possession',
+                   'encroachment', 'boundary', 'builder', 'flat purchase', 'rera', 'construction delay',
+                   'possession not given', 'agreement to sell', 'title', 'dispute', 'inheritance',
+                   'will', 'vasiyat', 'succession', 'partition', 'bhai', 'baap ki zameen'],
+        category: 'Property & Real Estate Law',
+        title: 'Property Dispute, Builder Default or Land Encroachment',
+        viability: 65,
+        actionability: 'Moderate',
+        claimValue: '₹50,000 – ₹50,00,000 (Case-specific)',
+        filingCosts: '₹1,000 – ₹5,000 (Civil/RERA Court)',
+        narrative: 'Property disputes are among the most complex matters in Indian law. For builder defaults (delayed possession, construction defects), the Real Estate (Regulation & Development) Act 2016 (RERA) provides a fast-track, dedicated regulator in every state. Filing a RERA complaint is relatively cheap and fast (3–6 months) compared to civil court (3–5 years). For inheritance disputes, a suit for partition can be filed in civil court. Encroachment must be documented with survey records from the tehsil office.',
+        steps: [
+          'For builder disputes: file a complaint on your state\'s RERA portal (e.g., MahaRERA, HRERA). This is the fastest and cheapest option.',
+          'Collect original title documents, sale agreement, payment receipts, and builder communications.',
+          'Get a certified copy of the property\'s land record (Jamabandi/7-12 extract) from the tehsil office to verify ownership.',
+          'For land encroachment, file a police complaint and then a civil suit for declaration + injunction.',
+          'Engage a property lawyer to conduct a thorough title search before filing any suit.'
+        ]
+      },
+      {
+        id: 'cyber',
+        filterTag: 'consumer',
+        keywords: ['cyber', 'online fraud', 'upi', 'paytm', 'phonepe', 'bank fraud', 'phishing',
+                   'otp fraud', 'hacked', 'account hack', 'social media', 'defamation', 'fake account',
+                   'photo misuse', 'morphed', 'identity theft', 'extortion online', 'sextortion',
+                   'intimate photo', 'saiber', 'online theek'],
+        category: 'Cyber Crime & Digital Fraud',
+        title: 'Online Fraud, UPI Scam or Cyber Harassment',
+        viability: 60,
+        actionability: 'Moderate – Report Immediately',
+        claimValue: 'Recovery of Defrauded Amount',
+        filingCosts: '₹0 (Cybercrime Portal is free)',
+        narrative: 'India\'s IT Act 2000 (Sections 43, 66C, 66D, 67) and IPC cover cyber fraud, identity theft, and online harassment. The golden rule: report within 24-48 hours. RBI\'s zero-liability rule means if you report an unauthorized UPI/bank transaction within 3 working days, you are entitled to a full refund. For sextortion or intimate photo misuse, this is a non-bailable offence under IT Act §67 and POCSO if a minor is involved — police must act.',
+        steps: [
+          'Immediately report on cybercrime.gov.in or call the National Cybercrime Helpline: 1930.',
+          'For UPI/bank fraud: call your bank immediately to freeze the transaction, then file a complaint at the bank branch AND at 1930.',
+          'Do NOT delete any messages, screenshots, or emails — they are evidence. Take screenshots of everything.',
+          'File an FIR at the cyber crime police station in your city (most major cities have dedicated units).',
+          'For social media harassment/defamation: report the content on the platform AND file a legal complaint simultaneously.'
+        ]
+      },
+      {
+        id: 'contract',
+        filterTag: 'contract',
+        keywords: ['contract', 'agreement', 'breach', 'promise', 'deal', 'business', 'partner',
+                   'cheated', 'money stuck', 'loan', 'borrowed', 'return', 'promissory note',
+                   'nahi lautaya', 'paise wapas', 'dost ne', 'bhai ne', 'relative ne'],
+        category: 'Contract & Civil Dispute',
+        title: 'Breach of Contract or Money Recovery',
+        viability: 68,
+        actionability: 'Moderate',
+        claimValue: '₹10,000 – ₹5,00,000 (Claim Amount)',
+        filingCosts: '₹500 – ₹2,000 (Civil Court)',
+        narrative: 'Any oral or written agreement to do something (or pay something) is a contract under the Indian Contract Act 1872. If one party fails to perform, the aggrieved party is entitled to compensation equal to the actual loss suffered. For money recovery disputes, a summary suit under Order 37 CPC is the fastest civil court option, especially when the debt is based on a written agreement, cheque, or promissory note. Cheque bounce (under Sec 138 Negotiable Instruments Act) is a criminal matter that can result in imprisonment.',
+        steps: [
+          'Send a formal Legal Notice via an advocate (₹500–₹1,000) — this often resolves matters without going to court.',
+          'If based on a bounced cheque: file a criminal complaint under Sec 138 NI Act within 30 days of receiving the bank\'s dishonour memo.',
+          'Collect all evidence of the agreement: written contract, WhatsApp chats, bank transfer records, witnesses.',
+          'File a recovery suit in the Civil Court of appropriate jurisdiction (District Court for above ₹3 lakh).',
+          'Consider Lok Adalat for a quick settlement — if both parties agree, it has the force of a court decree and is appeal-proof.'
+        ]
+      }
+    ];
+
+    // ── MATCHING LOGIC: score each profile by keyword hits ───────────────
+    let bestProfile = null;
+    let bestScore = 0;
+
+    caseProfiles.forEach(profile => {
+      const score = hits(profile.keywords);
+      if (score > bestScore) {
+        bestScore = score;
+        bestProfile = profile;
+      }
+    });
+
+    // Fallback if nothing matched
+    const analysis = bestProfile || caseProfiles.find(p => p.id === 'contract');
+
+    // Count matching lawyers for this category
+    const matchingLawyerCount = LAWYERS_DATABASE.filter(l => l.specialty === analysis.filterTag).length;
+    const advocateCountEl = document.getElementById('matchmaker-advocate-count');
+    if (advocateCountEl) {
+      advocateCountEl.textContent = matchingLawyerCount > 0
+        ? `We found ${matchingLawyerCount} pre-vetted advocate${matchingLawyerCount > 1 ? 's' : ''} specializing in ${analysis.category}.`
+        : `We are matching you to our best available advocates for ${analysis.category}.`;
     }
 
     // Set state
@@ -1564,32 +1698,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Viability circle computation
     const radius = 32;
-    const circumference = 2 * Math.PI * radius; // ~201.06
+    const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (analysis.viability / 100) * circumference;
     resViabilityCircle.style.strokeDashoffset = strokeDashoffset;
-    resViabilityCircle.style.stroke = analysis.viability >= 70 ? '#10b981' : (analysis.viability >= 55 ? '#f59e0b' : '#f43f5e');
+    resViabilityCircle.style.stroke = analysis.viability >= 75 ? '#10b981' : (analysis.viability >= 60 ? '#f59e0b' : '#f43f5e');
     resViabilityPercent.textContent = `${analysis.viability}%`;
 
     resClaimValue.textContent = analysis.claimValue;
     resActionability.textContent = analysis.actionability;
-    resActionability.className = `value ${analysis.viability >= 70 ? 'text-emerald' : 'text-cyan'}`;
+    resActionability.className = `value ${analysis.viability >= 75 ? 'text-emerald' : 'text-cyan'}`;
     resFilingCosts.textContent = analysis.filingCosts;
     resNarrative.textContent = analysis.narrative;
 
     // Next steps checklist
     resStepsList.innerHTML = '';
-    analysis.steps.forEach(step => {
+    analysis.steps.forEach((step, i) => {
       const li = document.createElement('li');
       li.innerHTML = `
         <i data-lucide="check-square" class="text-emerald"></i>
         <div>
-          <strong>Action:</strong> ${step}
+          <strong>Step ${i + 1}:</strong> ${step}
         </div>
       `;
       resStepsList.appendChild(li);
     });
 
-    // Reset icons in steps
     lucide.createIcons();
 
     // Show result dashboard
@@ -1599,6 +1732,59 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show filter tag for lawyers
     activeCaseCategoryName.textContent = analysis.category.split(' ')[0];
     activeCaseFilterTag.style.display = 'flex';
+  }
+
+  // Copy Report button
+  const btnCopyReport = document.getElementById('btn-copy-report');
+  if (btnCopyReport) {
+    btnCopyReport.addEventListener('click', () => {
+      if (!state.analyzedData) return;
+      const d = state.analyzedData;
+      const reportText = [
+        `=== AEQUITAS LEGAL ANALYSIS REPORT ===`,
+        `Category: ${d.category}`,
+        `Case: ${d.title}`,
+        `Viability Score: ${d.viability}%`,
+        `Actionability: ${d.actionability}`,
+        `Estimated Claim Value: ${d.claimValue}`,
+        `Filing Costs: ${d.filingCosts}`,
+        `\nLegal Assessment:\n${d.narrative}`,
+        `\nRecommended Steps:\n${d.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`,
+        `\nGenerated by Aequitas Legal Platform — For educational purposes only.`
+      ].join('\n');
+      navigator.clipboard.writeText(reportText).then(() => {
+        btnCopyReport.innerHTML = `<i data-lucide="check"></i> Copied!`;
+        lucide.createIcons();
+        setTimeout(() => {
+          btnCopyReport.innerHTML = `<i data-lucide="clipboard-copy"></i> Copy Report`;
+          lucide.createIcons();
+        }, 2000);
+      });
+    });
+  }
+
+  // Reset Analyzer button
+  const btnResetAnalyzer = document.getElementById('btn-reset-analyzer');
+  if (btnResetAnalyzer) {
+    btnResetAnalyzer.addEventListener('click', () => {
+      caseInput.value = '';
+      charCount.textContent = '0';
+      analyzerSuccessState.style.display = 'none';
+      analyzerLoadingState.style.display = 'none';
+      analyzerInitialState.style.display = 'flex';
+      // Reset loading steps
+      ['step-1','step-2','step-3','step-4'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.className = 'loading-step' + (i === 0 ? ' active' : '');
+          const labels = ['Parsing plain text statement', 'Classifying legal domain and jurisdiction', 'Projecting financial feasibility & damages', 'Recommending immediate steps & advocates'];
+          el.innerHTML = `<i data-lucide="${i === 0 ? 'loader' : 'circle'}"></i> ${labels[i]}`;
+        }
+      });
+      lucide.createIcons();
+      state.isCaseAnalyzed = false;
+      activeCaseFilterTag.style.display = 'none';
+    });
   }
 
   // Link results to advocate matchmaker

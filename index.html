@@ -594,11 +594,19 @@
               <div class="action-footer">
                 <div class="action-info">
                   <i data-lucide="info" class="text-cyan"></i>
-                  <span>We found 3 legal advocates who successfully settled cases like this last month.</span>
+                  <span id="matchmaker-advocate-count">We found 3 legal advocates who successfully settled cases like this last month.</span>
                 </div>
-                <button class="btn btn-accent btn-large" id="btn-go-to-matchmaker">
-                  Match with Advocates <i data-lucide="arrow-right"></i>
-                </button>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <button class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-thread); color: var(--text-secondary);" id="btn-copy-report">
+                    <i data-lucide="clipboard-copy"></i> Copy Report
+                  </button>
+                  <button class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-thread); color: var(--text-secondary);" id="btn-reset-analyzer">
+                    <i data-lucide="rotate-ccw"></i> Start Over
+                  </button>
+                  <button class="btn btn-accent btn-large" id="btn-go-to-matchmaker">
+                    Match with Advocates <i data-lucide="arrow-right"></i>
+                  </button>
+                </div>
               </div>
             </div>
 
