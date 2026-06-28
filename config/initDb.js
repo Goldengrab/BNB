@@ -194,6 +194,7 @@ export async function initDb() {
   try { await db.execute(`ALTER TABLE lawyers ADD COLUMN password TEXT`); } catch(_) {}
   try { await db.execute(`ALTER TABLE lawyers ADD COLUMN is_visible INTEGER NOT NULL DEFAULT 0`); } catch(_) {}
   try { await db.execute(`ALTER TABLE lawyers ADD COLUMN is_profile_completed INTEGER NOT NULL DEFAULT 0`); } catch(_) {}
+  try { await db.execute(`ALTER TABLE lawyers ADD COLUMN contact_info TEXT`); } catch(_) {}
 
   // Ensure contact uniqueness for lawyers
   try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_lawyers_contact ON lawyers(contact_info)`); } catch(e) { console.warn("Failed to create idx_lawyers_contact:", e.message); }
