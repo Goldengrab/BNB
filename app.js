@@ -2543,20 +2543,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     state.activeConsultation.chat.forEach(msg => {
       const sender = msg.sender === 'client' ? 'sent' : 'received';
-      const avatar = msg.sender === 'client' ? 'ME' : advocateText;
 
       const msgWrapper = document.createElement('div');
       msgWrapper.className = `msg-wrapper ${sender}`;
 
       const time = msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      msgWrapper.innerHTML = `
-        <div class="msg-bubble">
-          ${msg.text}
-        </div>
-        <span class="msg-timestamp">${time}</span>
-      `;
+      let bubbleHTML = '';
 
+      if (msg.type === 'file') {
+        // File message — image or document
+        const isImage = msg.fileType && msg.fileType.startsWith('image/');
+        if (isImage && msg.fileDataUrl) {
+          bubbleHTML = `
+            <div class="msg-img-bubble">
+              <img src="${msg.fileDataUrl}" alt="${msg.fileName}" title="Click to download">
+            </div>
+          `;
+        } else {
+          const ext = (msg.fileName || '').split('.').pop().toUpperCase();
+          const extColors = { PDF: '#f43f5e', DOCX: '#3b82f6', DOC: '#3b82f6', TXT: '#8b5cf6', PNG: '#10b981', JPG: '#10b981', JPEG: '#10b981' };
+          const iconColor = extColors[ext] || 'var(--accent-cyan)';
+          bubbleHTML = `
+            <div class="msg-file-bubble">
+              <div class="file-icon" style="color:${iconColor}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="file-details">
+                <span class="file-name">${msg.fileName || 'Attachment'}</span>
+                <span class="file-size">${msg.fileSize || ''} • Tap to download</span>
+              </div>
+            </div>
+          `;
+        }
+      } else {
+        bubbleHTML = `<div class="msg-bubble">${msg.text}</div>`;
+      }
+
+      msgWrapper.innerHTML = `${bubbleHTML}<span class="msg-timestamp">${time}</span>`;
       chatMessagesBox.appendChild(msgWrapper);
     });
     chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
@@ -2658,6 +2682,164 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 1200);
   });
+
+  // ==================== CHAT FILE ATTACH & DRAG-DROP ====================
+  const chatContainer = document.querySelector('.workspace-chat-container');
+  const chatDragOverlay = document.getElementById('chat-drag-overlay');
+  const chatFileInput = document.getElementById('chat-file-input');
+
+  // Helper: format file size
+  function formatFileSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  // Helper: process and send a file as a chat message
+  function sendFileInChat(file) {
+    if (!file) return;
+    const maxSize = 25 * 1024 * 1024; // 25MB
+    if (file.size > maxSize) {
+      const toast = document.createElement('div');
+      toast.style.cssText = `position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.4);border-radius:10px;padding:12px 20px;color:var(--text-primary);font-size:12px;font-family:var(--font-mono);z-index:99999;`;
+      toast.textContent = `File too large: ${formatFileSize(file.size)} (max 25MB)`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+      return;
+    }
+
+    if (!state.activeConsultation) {
+      state.activeConsultation = { brief: 'Consultation', date: new Date().toISOString().substring(0, 10), mode: 'Online', chat: [] };
+    }
+    if (!state.activeConsultation.chat) state.activeConsultation.chat = [];
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isImage = file.type.startsWith('image/');
+    const reader = new FileReader();
+
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+
+      // Push file message to chat
+      state.activeConsultation.chat.push({
+        sender: 'client',
+        type: 'file',
+        fileName: file.name,
+        fileSize: formatFileSize(file.size),
+        fileType: file.type,
+        fileDataUrl: isImage ? dataUrl : null,
+        time
+      });
+
+      renderWorkspaceChat();
+
+      // Also add to right-side document list
+      addFileToDocumentSidebar(file, dataUrl);
+
+      // Auto-reply from advocate
+      const typingBubble = document.createElement('div');
+      typingBubble.className = 'msg-wrapper received typing-msg';
+      typingBubble.innerHTML = `<div class="msg-bubble" style="padding:10px 14px;opacity:0.6;"><span style="font-style:italic;">Advocate typing...</span></div>`;
+      chatMessagesBox.appendChild(typingBubble);
+      chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
+
+      setTimeout(() => {
+        typingBubble.remove();
+        const replyText = isImage
+          ? `Thanks for the image — I can see the document clearly. I'll review it and note any relevant clauses for our case.`
+          : `I've received your file "<strong>${file.name}</strong>". I'll review it shortly. You can also run the AI compliance scan from the Documents panel on the right.`;
+
+        state.activeConsultation.chat.push({
+          sender: 'lawyer',
+          text: replyText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        renderWorkspaceChat();
+      }, 1400);
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  // Helper: add a real file to the documents sidebar
+  function addFileToDocumentSidebar(file, dataUrl) {
+    if (!uploadedFilesList || !wsDocsCount) return;
+    const existingId = `user-file-${file.name.replace(/\W/g, '_')}`;
+    if (document.getElementById(existingId)) return; // already added
+
+    const currentCount = parseInt(wsDocsCount.textContent || '0', 10);
+    wsDocsCount.textContent = currentCount + 1;
+
+    const ext = file.name.split('.').pop().toUpperCase();
+    const isImage = file.type.startsWith('image/');
+    const itemEl = document.createElement('div');
+    itemEl.className = 'file-list-item';
+    itemEl.id = existingId;
+    itemEl.innerHTML = `
+      <div class="file-info">
+        <i data-lucide="${isImage ? 'image' : 'file-text'}"></i>
+        <div class="file-meta-text">
+          <span class="file-name">${file.name}</span>
+          <span class="file-size">${formatFileSize(file.size)} • Just added</span>
+        </div>
+      </div>
+      <div class="file-actions">
+        ${isImage
+          ? `<a href="${dataUrl}" download="${file.name}" class="btn-file-scan" style="text-decoration:none;">Download</a>`
+          : `<button class="btn-file-scan" onclick="alert('AI scan is available for mock documents. Upload LeaseAgreement.pdf or FreelanceContract.docx to run the full scan.')">Scan File</button>`
+        }
+      </div>
+    `;
+    uploadedFilesList.insertBefore(itemEl, uploadedFilesList.firstChild);
+    lucide.createIcons();
+  }
+
+  // 1. Paperclip attach button → open file picker
+  if (chatFileInput) {
+    chatFileInput.addEventListener('change', () => {
+      if (chatFileInput.files && chatFileInput.files.length > 0) {
+        Array.from(chatFileInput.files).forEach(f => sendFileInChat(f));
+        chatFileInput.value = ''; // reset so same file can be picked again
+      }
+    });
+  }
+
+  // 2. Drag over the CHAT CONTAINER → show overlay
+  if (chatContainer) {
+    chatContainer.addEventListener('dragenter', (e) => {
+      if (e.dataTransfer.types.includes('Files')) {
+        chatContainer.classList.add('chat-dragging');
+        if (chatDragOverlay) {
+          chatDragOverlay.style.display = 'flex';
+          lucide.createIcons();
+        }
+      }
+    });
+
+    chatContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    });
+
+    chatContainer.addEventListener('dragleave', (e) => {
+      // Only hide if we actually left the container (not just moved over a child)
+      if (!chatContainer.contains(e.relatedTarget)) {
+        chatContainer.classList.remove('chat-dragging');
+        if (chatDragOverlay) chatDragOverlay.style.display = 'none';
+      }
+    });
+
+    chatContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      chatContainer.classList.remove('chat-dragging');
+      if (chatDragOverlay) chatDragOverlay.style.display = 'none';
+
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        Array.from(files).forEach(f => sendFileInChat(f));
+      }
+    });
+  }
 
   // ==================== SECURE FILES & CLAUSE AUDITOR ====================
   // Mock file picker clicks

@@ -749,14 +749,37 @@
               </div>
             </div>
 
-            <!-- Messages Window -->
+          <!-- Messages Window -->
             <div class="chat-messages" id="chat-messages-box">
               <!-- Loaded dynamically by JS -->
             </div>
 
+            <!-- Chat Drag-Drop Overlay (shown when file is dragged over chat) -->
+            <div id="chat-drag-overlay" style="
+              display: none; position: absolute; inset: 0; z-index: 50;
+              background: rgba(6,182,212,0.08); border: 2px dashed var(--accent-cyan);
+              border-radius: inherit; backdrop-filter: blur(4px);
+              flex-direction: column; align-items: center; justify-content: center;
+              gap: 12px; color: var(--accent-cyan); font-family: var(--font-mono);
+              pointer-events: none;
+            ">
+              <i data-lucide="upload-cloud" style="width:48px;height:48px;"></i>
+              <span style="font-size:14px;">Drop file to send in chat</span>
+            </div>
+
             <!-- Message Input Bar -->
             <form class="chat-input-bar" id="chat-input-form">
-              <input type="text" id="chat-message-input" placeholder="Type your message to Sarah..." autocomplete="off">
+              <label for="chat-file-input" class="chat-attach-btn" title="Attach file" style="
+                display: flex; align-items: center; justify-content: center;
+                width: 38px; height: 38px; border-radius: 50%;
+                background: rgba(255,255,255,0.05); border: 1px solid var(--color-thread);
+                cursor: pointer; flex-shrink: 0; color: var(--text-secondary);
+                transition: all 0.2s;
+              ">
+                <i data-lucide="paperclip" style="width:16px;height:16px;"></i>
+              </label>
+              <input type="file" id="chat-file-input" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt" style="display:none;" multiple>
+              <input type="text" id="chat-message-input" placeholder="Type your message or drag a file here..." autocomplete="off">
               <button type="submit" class="btn btn-primary icon-btn-round" id="btn-send-message">
                 <i data-lucide="send"></i>
               </button>
