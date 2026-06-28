@@ -1609,6 +1609,33 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==================== ADVOCATE DIRECTORY FILTER LOGIC ====================
+  function getLawyerSearchScore(lawyer, query) {
+    if (!query) return 0;
+    const queryLower = query.toLowerCase();
+    const tokens = queryLower.split(/\W+/).filter(t => t.length > 2 && !STOP_WORDS_SET.has(t));
+    if (tokens.length === 0) return 0;
+
+    let score = 0;
+    const textToSearch = [
+      lawyer.name,
+      lawyer.specialtyLabel,
+      lawyer.bio,
+      ...(lawyer.packages || []).map(p => `${p.name} ${p.desc}`),
+      ...(lawyer.verified_cases || []).map(c => c.case_type)
+    ].join(' ').toLowerCase();
+
+    tokens.forEach(token => {
+      let pos = textToSearch.indexOf(token);
+      while (pos !== -1) {
+        score++;
+        pos = textToSearch.indexOf(token, pos + 1);
+      }
+    });
+
+    return score;
+  }
+
+  // ==================== ADVOCATE DIRECTORY FILTER LOGIC ====================
   function renderLawyers() {
     const specialtyVal = filterSpecialty.value;
     const pricingVal = filterPricing.value;
@@ -1644,14 +1671,69 @@ document.addEventListener('DOMContentLoaded', () => {
       return true;
     });
 
+    const searchQuery = caseSearchBar.value.trim();
+    if (searchQuery) {
+      filtered.sort((a, b) => {
+        const scoreA = getLawyerSearchScore(a, searchQuery);
+        const scoreB = getLawyerSearchScore(b, searchQuery);
+        return scoreB - scoreA;
+      });
+    }
+
+    // Create and append the status message card
+    const cardStatus = document.createElement('div');
+    cardStatus.id = 'search-status-message';
+    cardStatus.className = 'glass-card';
+    cardStatus.style.gridColumn = '1 / -1';
+    cardStatus.style.padding = '12px 16px';
+    cardStatus.style.marginBottom = '8px';
+    cardStatus.style.fontSize = '14px';
+    cardStatus.style.fontWeight = '500';
+    cardStatus.style.color = 'var(--text-secondary)';
+    cardStatus.style.display = 'flex';
+    cardStatus.style.alignItems = 'center';
+    cardStatus.style.gap = '8px';
+    cardStatus.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+    cardStatus.style.background = 'rgba(255, 255, 255, 0.02)';
+    cardStatus.style.borderRadius = '8px';
+
+    let statusText = '';
+    let statusIcon = 'info';
+
+    if (searchQuery) {
+      const bestCategory = determineBestCategory(searchQuery);
+      if (bestCategory) {
+        const label = SPECIALTY_LABELS_MAP[bestCategory] || bestCategory;
+        statusText = `Showing ${filtered.length} advocates for ${label}`;
+        statusIcon = 'sparkles';
+      } else {
+        statusText = 'No exact practice area matched. Showing all verified advocates.';
+        statusIcon = 'alert-circle';
+      }
+    } else {
+      if (specialtyVal !== 'all') {
+        const label = SPECIALTY_LABELS_MAP[specialtyVal] || specialtyVal;
+        statusText = `Showing ${filtered.length} advocates for ${label}`;
+      } else {
+        statusText = 'Showing all verified advocates';
+      }
+    }
+
+    cardStatus.innerHTML = `<i data-lucide="${statusIcon}" style="width: 16px; height: 16px; color: var(--accent-cyan);"></i><span>${statusText}</span>`;
+    lawyersListContainer.appendChild(cardStatus);
+
     if (filtered.length === 0) {
-      lawyersListContainer.innerHTML = `
-        <div class="glass-card" style="grid-column: span 3; text-align: center; padding: 40px;">
-          <i data-lucide="users-round" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 12px;"></i>
-          <h4>No advocates match this specific filter</h4>
-          <p style="color: var(--text-secondary); margin-top: 4px;">Try loosening your filters or resetting the category.</p>
-        </div>
+      const emptyCard = document.createElement('div');
+      emptyCard.className = 'glass-card';
+      emptyCard.style.gridColumn = 'span 3';
+      emptyCard.style.textAlign = 'center';
+      emptyCard.style.padding = '40px';
+      emptyCard.innerHTML = `
+        <i data-lucide="users-round" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 12px;"></i>
+        <h4>No advocates match this specific filter</h4>
+        <p style="color: var(--text-secondary); margin-top: 4px;">Try loosening your filters or resetting the category.</p>
       `;
+      lawyersListContainer.appendChild(emptyCard);
       lucide.createIcons();
       return;
     }
@@ -1841,7 +1923,61 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLawyers();
   });
 
+  // Configurable Keyword Dictionary for Case search matching
+  const SEARCH_KEYWORDS_DICTIONARY = {
+    tenancy: ['landlord', 'tenant', 'eviction', 'rent', 'lease', 'deposit', 'housing', 'apartment', 'habitability'],
+    employment: ['salary', 'wages', 'fired', 'termination', 'employer', 'employee', 'labour', 'overtime', 'wage', 'job', 'boss'],
+    contract: ['contract', 'agreement', 'invoice', 'freelance', 'payment', 'breach', 'nda', 'signing', 'intellectual', 'ip'],
+    family: ['divorce', 'custody', 'marriage', 'alimony', 'family', 'wife', 'husband', 'child'],
+    property: ['land', 'registry', 'property', 'plot', 'mutation'],
+    consumer: ['refund', 'defective', 'warranty', 'online purchase', 'car', 'dealer', 'lemon', 'consumer', 'billing', 'scam'],
+    criminal: ['theft', 'assault', 'fraud', 'police', 'fir', 'criminal', 'arrest', 'bail', 'jail', 'robbery', 'court case'],
+    corporate: ['corporate', 'company', 'incorporation', 'shares', 'partnership']
+  };
+
+  const SPECIALTY_LABELS_MAP = {
+    tenancy: 'Tenancy & Housing Law',
+    employment: 'Employment & Labor Law',
+    contract: 'Contracts & Freelance',
+    consumer: 'Consumer Protection',
+    family: 'Family Law & Divorce',
+    criminal: 'Criminal Defense',
+    property: 'Property Law',
+    corporate: 'Corporate Law'
+  };
+
+  const STOP_WORDS_SET = new Set(['a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'aren\'t', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can\'t', 'cannot', 'could', 'couldn\'t', 'did', 'didn\'t', 'do', 'does', 'doesn\'t', 'doing', 'don\'t', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'hadn\'t', 'has', 'hasn\'t', 'have', 'haven\'t', 'having', 'he', 'he\'d', 'he\'ll', 'he\'s', 'her', 'here', 'here\'s', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'how\'s', 'i', 'i\'d', 'i\'ll', 'i\'m', 'i\'ve', 'if', 'in', 'into', 'is', 'isn\'t', 'it', 'it\'s', 'its', 'itself', 'let\'s', 'me', 'more', 'most', 'mustn\'t', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours', 'ourselves', 'out', 'over', 'own', 'same', 'shan\'t', 'she', 'she\'d', 'she\'ll', 'she\'s', 'should', 'shouldn\'t', 'so', 'some', 'such', 'than', 'that', 'that\'s', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'there\'s', 'these', 'they', 'they\'d', 'they\'ll', 'they\'re', 'they\'ve', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'wasn\'t', 'we', 'we\'d', 'we\'ll', 'we\'re', 'we\'ve', 'were', 'weren\'t', 'what', 'what\'s', 'when', 'when\'s', 'where', 'where\'s', 'which', 'while', 'who', 'who\'s', 'whom', 'why', 'why\'s', 'with', 'won\'t', 'would', 'wouldn\'t', 'you', 'you\'d', 'you\'ll', 'you\'re', 'you\'ve', 'your', 'yours', 'yourself', 'yourselves']);
+
   // ==================== DYNAMIC CASE SEARCH ENGINE ====================
+  function determineBestCategory(query) {
+    if (!query) return null;
+    const queryLower = query.toLowerCase();
+    let maxScore = 0;
+    let bestCategory = null;
+
+    for (const [cat, keywords] of Object.entries(SEARCH_KEYWORDS_DICTIONARY)) {
+      let score = 0;
+      keywords.forEach(kw => {
+        const hasSpace = kw.includes(' ');
+        if (hasSpace) {
+          if (queryLower.includes(kw)) {
+            score++;
+          }
+        } else {
+          const regex = new RegExp('\\b' + kw + '\\b');
+          if (regex.test(queryLower)) {
+            score++;
+          }
+        }
+      });
+      if (score > maxScore) {
+        maxScore = score;
+        bestCategory = cat;
+      }
+    }
+    return bestCategory;
+  }
+
   function executeCaseSearch() {
     const query = caseSearchBar.value.trim().toLowerCase();
     if (!query) {
@@ -1851,41 +1987,23 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    let recommendedCat = 'all';
-    let recommendedLabel = '';
+    const bestCategory = determineBestCategory(query);
 
-    // Keywords mapping
-    if (query.includes('land') || query.includes('rent') || query.includes('deposit') || query.includes('lease') || query.includes('tenant') || query.includes('landlord') || query.includes('apartment') || query.includes('housing') || query.includes('eviction')) {
-      recommendedCat = 'tenancy';
-      recommendedLabel = 'Tenancy & Housing Law';
-    } else if (query.includes('divorce') || query.includes('custody') || query.includes('marriage') || query.includes('family') || query.includes('wife') || query.includes('husband') || query.includes('alimony') || query.includes('child')) {
-      recommendedCat = 'family';
-      recommendedLabel = 'Family & Divorce Law';
-    } else if (query.includes('criminal') || query.includes('theft') || query.includes('assault') || query.includes('police') || query.includes('arrest') || query.includes('bail') || query.includes('jail') || query.includes('robbery') || query.includes('court case')) {
-      recommendedCat = 'criminal';
-      recommendedLabel = 'Criminal Defense';
-    } else if (query.includes('wage') || query.includes('salary') || query.includes('pay') || query.includes('freelance') || query.includes('invoice') || query.includes('boss') || query.includes('overtime') || query.includes('designer') || query.includes('contractor') || query.includes('job')) {
-      recommendedCat = 'employment';
-      recommendedLabel = 'Employment & Labor Law';
-    } else if (query.includes('contract') || query.includes('nda') || query.includes('agreement') || query.includes('signing') || query.includes('intellectual') || query.includes('ip')) {
-      recommendedCat = 'contract';
-      recommendedLabel = 'Contracts & Freelance';
-    } else if (query.includes('car') || query.includes('warranty') || query.includes('dealer') || query.includes('lemon') || query.includes('consumer') || query.includes('billing') || query.includes('scam') || query.includes('refund')) {
-      recommendedCat = 'consumer';
-      recommendedLabel = 'Consumer Protection';
-    }
-
-    if (recommendedCat !== 'all') {
-      // Set recommendation text and show alert
-      recCategoryName.textContent = recommendedLabel;
+    if (bestCategory) {
+      const label = SPECIALTY_LABELS_MAP[bestCategory];
+      recCategoryName.textContent = label;
       searchRecommendationBox.style.display = 'flex';
 
-      // Set filter specialty and render
-      filterSpecialty.value = recommendedCat;
+      // Ensure the category exists in select options
+      const optionExists = Array.from(filterSpecialty.options).some(opt => opt.value === bestCategory);
+      if (optionExists) {
+        filterSpecialty.value = bestCategory;
+      } else {
+        filterSpecialty.value = 'all';
+      }
       renderLawyers();
     } else {
       searchRecommendationBox.style.display = 'none';
-      alert('Could not determine a specific match. Showing all fields. Try searching with keywords like "divorce", "land dispute", or "unpaid pay".');
       filterSpecialty.value = 'all';
       renderLawyers();
     }
