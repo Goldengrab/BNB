@@ -4237,11 +4237,12 @@ Advocate for Plaintiff`,
       try {
         let endpoint = '';
         let payload = {};
+        const sharedName = document.getElementById('settings-name-shared').value;
 
         if (state.userType === 'lawyer') {
           endpoint = `${API_BASE}/api/lawyers/${state.userProfile.id}`;
           payload = {
-            name: document.getElementById('settings-lawyer-name').value,
+            name: sharedName,
             specialty: document.getElementById('settings-lawyer-specialty').value,
             exp: document.getElementById('settings-lawyer-exp').value,
             fought: document.getElementById('settings-lawyer-fought').value,
@@ -4251,8 +4252,8 @@ Advocate for Plaintiff`,
         } else {
           endpoint = `${API_BASE}/api/clients/${state.userProfile.id}`;
           payload = {
-            name: document.getElementById('settings-client-name').value,
-            city: document.getElementById('settings-client-city').value,
+            name: sharedName,
+            city: document.getElementById('settings-city-shared').value,
             interest: document.getElementById('settings-client-interest').value
           };
         }
