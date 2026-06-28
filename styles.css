@@ -2310,6 +2310,12 @@ body {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 32px;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.onboarding-container::-webkit-scrollbar {
+  display: none;
 }
 
 .onboarding-step {
